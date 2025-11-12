@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="primary">#2790FF</color>
+    <color name="primary_dark">#001AFF</color>
+    <color name="background">#FFFFFF</color>
+    <color name="background_secondary">#2F2F2F</color>
+    <color name="background_tertiary">#1B1C1F</color>
+    <color name="background_dark">#121114</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secundary">#424242</color>
+    <color name="text_terciary">#757575</color>
+    <color name="text_message_send">#123969</color>
+    <color name="custom_divider">#505050</color>
+    <color name="red">#FF0000</color>
+    <color name="green">#27F595</color>
+</resources>
