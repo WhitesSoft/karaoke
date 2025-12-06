@@ -2,21 +2,37 @@ package com.gvtlaiko.tengokaraoke.ui.main
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Looper
+import android.text.InputType
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -30,8 +46,10 @@ import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.gms.common.images.WebImage
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gvtlaiko.tengokaraoke.R
 import com.gvtlaiko.tengokaraoke.adapters.GridSpacingItemDecoration
+import com.gvtlaiko.tengokaraoke.adapters.SugerenciasAdapter
 import com.gvtlaiko.tengokaraoke.adapters.VideoAdapter
 import com.gvtlaiko.tengokaraoke.adapters.VideoEnColaAdapter
 import com.gvtlaiko.tengokaraoke.core.UIState
@@ -42,8 +60,9 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -56,37 +75,50 @@ class MainActivity : AppCompatActivity() {
     private val TAG by lazy { "MainActivity" }
     private lateinit var youTubePlayerView: YouTubePlayerView
     private var youTubePlayer: YouTubePlayer? = null
-    private var karaoke = false
+    private var karaoke = true
     private var reproductorEnUso = false
     private val playerTracker = YouTubePlayerTracker()
     private var actualVideoId: String? = null
     private var actualVideo: Item? = null
-    private var isMuted = false
+
     private lateinit var audioManager: AudioManager
     private lateinit var castContext: CastContext
     private var castSession: CastSession? = null
 
+    // --- CONFIGURACIÓN DE SEGURIDAD ---
+    private val PREFS_NAME = "AppConfig"
+    private val KEY_IS_UNLOCKED = "is_app_unlocked"
 
-    private val volumeHandler = android.os.Handler(Looper.getMainLooper())
-    private var isVolumeSessionActive = false
+    private val APP_USER = "tengori"
+    private val APP_PASSWORD = "1004"
 
+    private var isPlayerFullscreen = false
+    private var playerOriginalParent: FrameLayout? = null
+    private var playerOriginalLayoutParams: FrameLayout.LayoutParams? = null
 
-    private val VOLUME_SESSION_TIMEOUT = 2000L
-    private val volumeSessionTimeoutRunnable = Runnable {
-        isVolumeSessionActive = false
-    }
+    private var isLoopingEnabled = false
 
-    // Listener para saber cuando nos conectamos/desconectamos
+    private lateinit var adapterVideosSugerencias: ArrayAdapter<String>
+    private val sugerenciasVideosList = mutableListOf<String>()
+
+    private val playbackSpeeds = listOf(
+        PlayerConstants.PlaybackRate.RATE_0_25,
+        PlayerConstants.PlaybackRate.RATE_0_5,
+        PlayerConstants.PlaybackRate.RATE_1,
+        PlayerConstants.PlaybackRate.RATE_1_5,
+        PlayerConstants.PlaybackRate.RATE_2
+    )
+    private val speedLabels = listOf("0.25x", "0.5x", "1x", "1.5x", "2x")
+    private var currentSpeedIndex = 2
+
+    var searchJob: Job? = null
+
     private val sessionManagerListener = object : SessionManagerListener<CastSession> {
         override fun onSessionStarted(session: CastSession, sessionId: String) {
             castSession = session
-            invalidateOptionsMenu() // Actualiza el menú para mostrar el botón conectado
-            Toast.makeText(this@MainActivity, "Conectado al Chromecast", Toast.LENGTH_SHORT).show()
+            invalidateOptionsMenu()
 
             if (actualVideo != null && reproductorEnUso) {
-                Toast.makeText(this@MainActivity, "Transfiriendo video a la TV...", Toast.LENGTH_SHORT).show()
-
-                // Envía el video actual a la TV
                 loadRemoteMedia(actualVideo!!)
             }
         }
@@ -99,8 +131,6 @@ class MainActivity : AppCompatActivity() {
         override fun onSessionEnded(session: CastSession, error: Int) {
             castSession = null
             invalidateOptionsMenu()
-            Toast.makeText(this@MainActivity, "Desconectado del Chromecast", Toast.LENGTH_SHORT)
-                .show()
         }
 
         override fun onSessionSuspended(session: CastSession, reason: Int) {}
@@ -124,85 +154,151 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        castContext = CastContext.getSharedInstance(this)
+        try {
+            castContext = CastContext.getSharedInstance(this)
+            iniciarCastPlayer()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error inicializando CastContext: ${e.message}")
+        }
 
+        val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)
+
+        if (!isUnlocked) {
+            showPasswordDialog(sharedPref)
+        } else {
+            startAppComponents()
+        }
+
+    }
+
+    private fun showPasswordDialog(sharedPref: SharedPreferences) {
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
+        val marginPixel =
+            resources.getDimensionPixelSize(R.dimen.grid_item_spacing) // O usa 50 si da error
+        params.setMargins(marginPixel, 0, marginPixel, 0)
+        layout.layoutParams = params
+        layout.setPadding(marginPixel, marginPixel, marginPixel, marginPixel)
+
+
+        val etUser = EditText(this)
+        etUser.hint = "Usuario"
+        etUser.inputType = InputType.TYPE_CLASS_TEXT
+        layout.addView(etUser)
+
+        val etPassword = EditText(this)
+        etPassword.hint = "Contraseña"
+        etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        layout.addView(etPassword)
+
+        AlertDialog.Builder(this)
+            .setTitle("Activación Requerida")
+            .setMessage("Ingrese sus credenciales para habilitar la aplicación.")
+            .setView(layout)
+            .setCancelable(false)
+            .setPositiveButton("Ingresar") { _, _ ->
+                val user = etUser.text.toString().trim()
+                val password = etPassword.text.toString().trim()
+
+                if (user == APP_USER && password == APP_PASSWORD) {
+
+                    with(sharedPref.edit()) {
+                        putBoolean(KEY_IS_UNLOCKED, true)
+                        apply()
+                    }
+                    startAppComponents()
+
+                } else {
+                    finish()
+                }
+            }
+            .setNegativeButton("Salir") { _, _ ->
+                finish()
+            }
+            .show()
+    }
+
+    private fun startAppComponents() {
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         setupUI()
         setupRecycler()
         setupRecyclerVideosEnCola()
         setupYoutubePlayer()
         setupPlayerControles()
-        getData()
-        iniciarCastPlayer()
+        observarListaVideos()
+        observarSugerencias()
+        mainViewModel.getVideos("Musica en tendencia -shorts -tiktok")
 
-        binding.wvYoutube?.settings?.userAgentString =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
+        val onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isPlayerFullscreen) {
+                    exitCustomFullscreen()
+                } else {
+                    showExitConfirmationDialog()
+                }
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+    }
 
-        binding.wvYoutube?.settings?.javaScriptEnabled = true
-        binding.wvYoutube?.isVisible = false
+    private fun showExitConfirmationDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_exit_app, null)
+        val builder = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
 
+        val dialog = builder.create()
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val btnCancel = dialogView.findViewById<View>(R.id.btnCancel)
+        val btnExit = dialogView.findViewById<View>(R.id.btnExit)
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnExit.setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+
+        dialog.show()
     }
 
     private fun iniciarCastPlayer() {
-
         val mediaRouteButton = findViewById<MediaRouteButton>(R.id.ivShare)
         CastButtonFactory.setUpMediaRouteButton(applicationContext, mediaRouteButton)
-
     }
 
-    // Dentro de MainActivity.kt
     private fun loadRemoteMedia(video: Item) {
         Log.i(TAG, "Cast: $video")
         if (castSession == null) {
-            return // No estamos conectados, no hacemos nada
+            return
         }
 
-
-        // Pausa el reproductor local
         youTubePlayer?.pause()
 
-        // Construye el objeto MediaInfo que necesita el Chromecast
         val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
         movieMetadata.putString(MediaMetadata.KEY_TITLE, video.snippet.title)
         movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, video.snippet.channelTitle)
         movieMetadata.addImage(WebImage(Uri.parse(video.snippet.thumbnails.high.url)))
 
-        // ¡La magia está aquí! El ID de contenido es solo el videoId de YouTube.
         val mediaInfo = MediaInfo.Builder(video.id.videoId)
             .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
             .setContentType("videos/mp4")
             .setMetadata(movieMetadata)
             .build()
 
-        // Carga el video en el reproductor remoto
         val remoteMediaClient = castSession!!.remoteMediaClient
-        remoteMediaClient?.load(mediaInfo, true) // `true` para autoplay
-
-        Toast.makeText(this, "Reproduciendo en TV: ${video.snippet.title}", Toast.LENGTH_LONG)
-            .show()
-
-        // Aquí deberías cambiar tu UI para mostrar un control remoto en lugar del reproductor
-        // showRemoteControlsUI()
-    }
-
-    private fun adjustSystemVolume(direction: Int) {
-        volumeHandler.removeCallbacks(volumeSessionTimeoutRunnable)
-
-        val flags: Int
-        if (isVolumeSessionActive) {
-            flags = AudioManager.FLAG_PLAY_SOUND
-        } else {
-            isVolumeSessionActive = true
-            flags = AudioManager.FLAG_SHOW_UI
-        }
-
-        audioManager.adjustStreamVolume(
-            AudioManager.STREAM_MUSIC,
-            direction, // Usa la dirección (subir o bajar) que nos pasaron
-            flags
-        )
-        volumeHandler.postDelayed(volumeSessionTimeoutRunnable, VOLUME_SESSION_TIMEOUT)
+        remoteMediaClient?.load(mediaInfo, true)
     }
 
     private fun setupYoutubePlayer() {
@@ -219,9 +315,6 @@ class MainActivity : AppCompatActivity() {
                 if (listaVideosEnCola.isNotEmpty()) {
                     iniciarReproduccionEnCola()
                 }
-//                if (listaVideosEnCola.isNotEmpty() && !reproductorEnUso) {
-//                    iniciarReproduccionEnCola()
-//                }
             }
 
             override fun onVideoId(player: YouTubePlayer, videoId: String) {
@@ -247,19 +340,18 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (state == PlayerConstants.PlayerState.ENDED) {
-                    iniciarReproduccionEnCola()
+                    if (isLoopingEnabled) {
+                        youTubePlayer?.seekTo(0f)
+                        youTubePlayer?.play()
+                    } else {
+                        iniciarReproduccionEnCola()
+                    }
                 }
             }
 
             override fun onError(player: YouTubePlayer, error: PlayerConstants.PlayerError) {
                 super.onError(player, error)
-                Toast.makeText(
-                    this@MainActivity,
-                    "Error al cargar el video: $error",
-                    Toast.LENGTH_SHORT
-                ).show()
                 Log.e(TAG, "YouTube Player Error: $error")
-                // Al haber un error, consideramos que el reproductor está libre e intentamos el siguiente
                 reproductorEnUso = false
                 binding.llContenedorVideo?.isVisible = true
                 binding.youtubePlayerView.isVisible = false
@@ -269,16 +361,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupPlayerControles() {
-        binding.ivNextVideo?.setOnClickListener {
-            //Toast.makeText(this, "Reproduciendo el siguiente video...", Toast.LENGTH_SHORT).show()
-            iniciarReproduccionEnCola() // Reutilizamos la lógica que ya funciona
-        }
+//        binding.ivNextVideo?.setOnClickListener {
+//            iniciarReproduccionEnCola()
+//        }
 
         binding.ivReplay?.setOnClickListener {
             youTubePlayer?.let { player ->
-                player.seekTo(0f) // Vuelve al segundo 0
-                player.play()     // Asegura que se reproduzca
-                Toast.makeText(this, "Repitiendo video", Toast.LENGTH_SHORT).show()
+                player.seekTo(0f)
+                player.play()
+            }
+        }
+
+        binding.ivBucleVideo?.setOnClickListener {
+            isLoopingEnabled = !isLoopingEnabled
+
+            if (isLoopingEnabled) {
+                binding.ivBucleVideo?.setColorFilter(getColor(R.color.primary_dark))
+            } else {
+                binding.ivBucleVideo?.setColorFilter(getColor(R.color.white))
+            }
+        }
+
+        binding.ivFastVideo?.setOnClickListener {
+            if (currentSpeedIndex < playbackSpeeds.size - 1) {
+                currentSpeedIndex++
+                updatePlaybackSpeed()
+            }
+        }
+
+        binding.ivLowVideo?.setOnClickListener {
+            if (currentSpeedIndex > 0) {
+                currentSpeedIndex--
+                updatePlaybackSpeed()
             }
         }
 
@@ -301,61 +415,113 @@ class MainActivity : AppCompatActivity() {
 ////            startActivity(Intent.createChooser(shareIntent, "Compartir video"))
 //        }
 
-        binding.ivMicroOff?.setOnClickListener {
-            audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_TOGGLE_MUTE, // Alterna entre mute/unmute
-                AudioManager.FLAG_SHOW_UI
-            )
-//            youTubePlayer?.let { player ->
-//                isMuted = !isMuted // Cambia el estado
-//                if (isMuted) {
-//                    // Guarda el volumen actual y luego silencia
-//                    //ultimoNivelVolumen = playerTracker.volume
-//                    player.setVolume(0)
-//                    //binding?.ivMicroOff.setImageResource(R.drawable.ic_volume_on) // Cambia el ícono
-//                    Toast.makeText(this, "Silenciado", Toast.LENGTH_SHORT).show()
-//                } else {
-//                    // Restaura el volumen anterior
-//                    player.setVolume(actualVolumen)
-////                    binding.ivMicroOff.setImageResource(R.drawable.ic_volume_off) // Restaura el ícono
-//                    Toast.makeText(this, "Sonido activado", Toast.LENGTH_SHORT).show()
-//                }
-//            }
+        binding.ivFullscreen?.setOnClickListener {
+            if (isPlayerFullscreen) {
+                exitCustomFullscreen()
+            } else {
+                enterCustomFullscreen()
+            }
         }
 
-        binding.ivVolumeDown?.setOnClickListener {
-//            actualVolumen = (actualVolumen - 10).coerceIn(0, 100)
-//            youTubePlayer?.setVolume(actualVolumen)
-//            isMuted = actualVolumen == 0 // Si el volumen es 0, está silenciado
-            audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_LOWER,
-                AudioManager.FLAG_SHOW_UI
-            )
-            // adjustSystemVolume(AudioManager.ADJUST_LOWER)
-        }
-
-
-        binding.ivVolumeUp?.setOnClickListener {
-            //adjustSystemVolume(AudioManager.ADJUST_RAISE)
-            audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                AudioManager.ADJUST_RAISE,
-                AudioManager.FLAG_SHOW_UI
-            )
-////            actualVolumen = (actualVolumen + 10).coerceIn(0, 100)
-//            youTubePlayer?.setVolume(actualVolumen)
-//            // Si subimos el volumen, ya no puede estar silenciado
-//            if (isMuted && actualVolumen > 0) {
-//                isMuted = false
-//                binding.ivMicroOff?.setImageResource(R.drawable.ic_volume_off)
-//            }
+//        binding.ivVolumeDown?.setOnClickListener {
+//            audioManager.adjustStreamVolume(
+//                AudioManager.STREAM_MUSIC,
+//                AudioManager.ADJUST_LOWER,
+//                AudioManager.FLAG_SHOW_UI
+//            )
+//        }
+//
+//
+//        binding.ivVolumeUp?.setOnClickListener {
+//            audioManager.adjustStreamVolume(
+//                AudioManager.STREAM_MUSIC,
+//                AudioManager.ADJUST_RAISE,
+//                AudioManager.FLAG_SHOW_UI
+//            )
+//        }
+        binding.ivSearch?.setOnClickListener {
+            realizarBusqueda()
         }
     }
 
-    private fun realizarBusqueda() {
-        val textoBuscado = binding.edtxtBusquedaUsuario?.text.toString()
+    private fun hideSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let {
+                it.hide(WindowInsets.Type.systemBars())
+                it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+        }
+    }
+
+    private fun showSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.show(WindowInsets.Type.systemBars())
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        }
+    }
+
+    private fun enterCustomFullscreen() {
+        playerOriginalParent = binding.frameContainer
+        playerOriginalLayoutParams = youTubePlayerView.layoutParams as FrameLayout.LayoutParams
+
+        playerOriginalParent?.removeView(youTubePlayerView)
+
+        val rootLayout = binding.main
+        val fullScreenParams = ConstraintLayout.LayoutParams(
+            ConstraintLayout.LayoutParams.MATCH_PARENT,
+            ConstraintLayout.LayoutParams.MATCH_PARENT
+        )
+
+        rootLayout.addView(youTubePlayerView, fullScreenParams)
+
+        binding.lvContenedor?.isVisible = false
+
+        hideSystemUI()
+
+        binding.ivFullscreen?.setImageResource(R.drawable.ic_close_fullscreen) // Asumiendo que tienes este ícono
+        isPlayerFullscreen = true
+    }
+
+    private fun exitCustomFullscreen() {
+        binding.main.removeView(youTubePlayerView)
+
+        playerOriginalParent?.addView(youTubePlayerView, playerOriginalLayoutParams)
+
+        playerOriginalParent = null
+        playerOriginalLayoutParams = null
+
+        binding.lvContenedor?.isVisible = true
+
+        showSystemUI()
+
+        binding.ivFullscreen?.setImageResource(R.drawable.ic_open_with) // Tu ícono original
+        isPlayerFullscreen = false
+    }
+
+    private fun updatePlaybackSpeed() {
+        if (youTubePlayer == null) return
+
+        val newSpeedEnum = playbackSpeeds[currentSpeedIndex]
+        val newSpeedLabel = speedLabels[currentSpeedIndex]
+
+        youTubePlayer?.setPlaybackRate(newSpeedEnum)
+        binding.tvFastVideo?.text = newSpeedLabel
+    }
+
+
+    private fun realizarBusqueda(textoEspecifico: String? = null) {
+
+        val textoBuscado = textoEspecifico ?: binding.edtxtBusquedaUsuario?.text.toString()
 
         if (textoBuscado.isNotEmpty()) {
 
@@ -365,41 +531,40 @@ class MainActivity : AppCompatActivity() {
                 textoBuscado
             }
 
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.edtxtBusquedaUsuario?.windowToken, 0)
+
+
             Log.i(TAG, "Iniciando búsqueda con query: $query")
-            mainViewModel.getVideos(query, 35)
+            mainViewModel.getVideos(query)
         }
     }
 
     private fun iniciarReproduccionEnCola() {
         if (listaVideosEnCola.isEmpty()) {
-            Toast.makeText(this, "La cola de reproduccion está vacia", Toast.LENGTH_SHORT).show()
             reproductorEnUso = false
-//            binding.llContenedorVideo?.isVisible = true
-//            binding.youtubePlayerView.isVisible = false
+            binding.llContenedorVideo?.isVisible = true
+            binding.youtubePlayerView.isVisible = false
             return
         }
 
-
-        // 1. Toma el primer video de la cola (FIFO)
         val proximoVideo = listaVideosEnCola.first()
         actualVideo = proximoVideo
 
-        // 2. Cárgalo en el reproductor
         youTubePlayer?.loadVideo(proximoVideo.id.videoId, 0f)
 
-        binding.wvYoutube?.loadUrl("https://www.youtube.com/watch?v=${proximoVideo.id.videoId}")
-
-        // 3. Elimínalo de la lista de datos
         listaVideosEnCola.removeAt(0)
-
-        // 4. Notifica al adaptador que el ítem en la posición 0 fue eliminado
         videoAdapterEnCola.notifyItemRemoved(0)
     }
 
 
     @SuppressLint("ResourceType", "UseCompatLoadingForColorStateLists")
     private fun setupUI() {
-        binding.tilBusquedaUsuario?.setBoxStrokeColorStateList(resources.getColorStateList(R.drawable.selector_outline))
+
+        adapterVideosSugerencias =
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sugerenciasVideosList)
+        binding.edtxtBusquedaUsuario?.setAdapter(adapterVideosSugerencias)
+        setupSearchListener(binding.edtxtBusquedaUsuario!!)
 
         binding.edtxtBusquedaUsuario?.setOnEditorActionListener { textView, actionId, keyEvent ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -415,29 +580,40 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
+        binding.edtxtBusquedaUsuario?.setOnItemClickListener { parent, view, position, id ->
+
+            val itemSeleccionado = parent.getItemAtPosition(position) as String
+
+            realizarBusqueda(itemSeleccionado)
+            binding.edtxtBusquedaUsuario?.setText("")
+            binding.edtxtBusquedaUsuario?.clearFocus()
+        }
+
         binding.swKaraoke?.setOnCheckedChangeListener { _, isChecked ->
             karaoke = isChecked
             realizarBusqueda()
         }
 
-//        val youTubePlayerView: YouTubePlayerView? = binding.youtubePlayerView
-//        lifecycle.addObserver(youTubePlayerView)
-        //val youTubePlayerView: YouTubePlayerView? = binding.youtubePlayerView
-
         youTubePlayerView = binding.youtubePlayerView
-        // binding.youtubePlayerView.let { playerView ->
-//        lifecycle.addObserver(youTubePlayerView)
-//        //}
-//        youTubePlayerView.addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
-//            override fun onReady(youTubePlayer: YouTubePlayer) {
-//                // Guardamos la referencia del reproductor para usarla después
-//                this@MainActivity.youTubePlayer = youTubePlayer
-//            }
-//        })
+
     }
 
-    private fun getData() {
-        mainViewModel.getVideos("Videos populares de hoy", 35)
+    private fun setupSearchListener(autoComplete: AutoCompleteTextView) {
+        autoComplete.addTextChangedListener { text ->
+            searchJob?.cancel()
+
+            searchJob = lifecycleScope.launch {
+
+                delay(500)
+
+                if (!text.isNullOrBlank()) {
+                    mainViewModel.getSugerencias(text.toString())
+                }
+            }
+        }
+    }
+
+    private fun observarListaVideos() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.stateData.collect { state ->
@@ -468,6 +644,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun observarSugerencias() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.sugerenciasState.collect { state ->
+                    when (state) {
+                        is UIState.Success -> {
+                            val sugerencias = state.data
+
+                            Log.i(TAG, "Sugerencias de YouTube: $sugerencias")
+
+                            val nuevoAdapter = SugerenciasAdapter(
+                                this@MainActivity,
+                                sugerencias
+                            )
+
+                            binding.edtxtBusquedaUsuario?.let { autoComplete ->
+                                autoComplete.setAdapter(nuevoAdapter)
+
+                                if (autoComplete.hasFocus() && sugerencias.isNotEmpty()) {
+                                    autoComplete.showDropDown()
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
     private fun setupRecycler() {
 
         videoAdapter = VideoAdapter(listaVideos) { item -> onClickListener(item) }
@@ -488,24 +694,29 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun onClickListener(item: Item) {
-        Toast.makeText(this, item.snippet.title, Toast.LENGTH_LONG).show()
+    private fun limpiarTexto(texto: String): String {
+        return androidx.core.text.HtmlCompat.fromHtml(
+            texto,
+            androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY
+        ).toString()
+    }
 
+    private fun onClickListener(item: Item) {
         listaVideosEnCola.add(item)
         videoAdapterEnCola.notifyItemInserted(listaVideosEnCola.size - 1)
         binding.rvEnCola?.scrollToPosition(listaVideosEnCola.size - 1)
-        Toast.makeText(this, "'${item.snippet.title}' añadido a la cola", Toast.LENGTH_SHORT)
-            .show()
-
-        if (!reproductorEnUso && youTubePlayer != null) {
-            iniciarReproduccionEnCola()
-        }
-
     }
 
     private fun setupRecyclerVideosEnCola() {
-        videoAdapterEnCola =
-            VideoEnColaAdapter(listaVideosEnCola) { item -> onClickListenerVideosEnCola(item) }
+        videoAdapterEnCola = VideoEnColaAdapter(
+            listaVideosEnCola,
+            onItemClick = { item, position ->
+                onPlayVideoFromQueue(item, position)
+            },
+            onRemoveClick = { item, position ->
+                onRemoveVideoFromQueue(item, position)
+            }
+        )
 
         binding.rvEnCola.apply {
             this?.layoutManager = LinearLayoutManager(this@MainActivity)
@@ -513,8 +724,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onClickListenerVideosEnCola(item: Item) {
-        Toast.makeText(this, item.snippet.title, Toast.LENGTH_LONG).show()
+    private fun onRemoveVideoFromQueue(item: Item, position: Int) {
+        listaVideosEnCola.removeAt(position)
+        videoAdapterEnCola.notifyItemRemoved(position)
+        videoAdapterEnCola.notifyItemRangeChanged(position, listaVideosEnCola.size - position)
+    }
+
+    private fun onPlayVideoFromQueue(item: Item, position: Int) {
+        binding.llContenedorVideo?.isVisible = false
+        binding.youtubePlayerView.isVisible = true
+        reproductorEnUso = true
+
+        youTubePlayer?.loadVideo(item.id.videoId, 0f)
+        actualVideo = item
+
+        listaVideosEnCola.removeAt(position)
+        videoAdapterEnCola.notifyItemRemoved(position)
+        videoAdapterEnCola.notifyItemRangeChanged(position, listaVideosEnCola.size - position)
     }
 
     override fun onDestroy() {

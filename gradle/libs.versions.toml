@@ -34,7 +34,6 @@ androidx-lifecycle = { group = "androidx.lifecycle", name = "lifecycle-runtime-k
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glidev" }
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glidev" }
 android-youtube = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtube" }
-android-youtube-chromecast = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtube" }
 chromecast = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "chromecast" }
 
 [plugins]

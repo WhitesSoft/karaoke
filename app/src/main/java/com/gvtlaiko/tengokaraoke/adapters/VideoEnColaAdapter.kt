@@ -12,7 +12,8 @@ import com.gvtlaiko.tengokaraoke.databinding.CardItemVideoColaBinding
 
 class VideoEnColaAdapter(
     private val videos: MutableList<Item>,
-    private val onClickListenerVideosEnCola: (Item) -> Unit
+    private val onItemClick: (Item, Int) -> Unit,
+    private val onRemoveClick: (Item, Int) -> Unit
 ) : RecyclerView.Adapter<VideoEnColaAdapter.VideoViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
@@ -35,6 +36,23 @@ class VideoEnColaAdapter(
     inner class VideoViewHolder(private val binding: CardItemVideoColaBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        init {
+            // Listener para el ícono de eliminar
+            binding.ivRemoveItem.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onRemoveClick(videos[position], position)
+                }
+            }
+
+            binding.root.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClick(videos[position], position)
+                }
+            }
+        }
+
         fun render(item: Item) {
             with(binding) {
                 tvIdVideo.text = item.id.videoId
@@ -42,7 +60,6 @@ class VideoEnColaAdapter(
                 tvLastMessage.text = item.snippet.channelTitle
                 Glide.with(ivCard.context).load(item.snippet.thumbnails.high.url).into(ivCard)
             }
-            binding.root.setOnClickListener { onClickListenerVideosEnCola(item) }
         }
     }
 
