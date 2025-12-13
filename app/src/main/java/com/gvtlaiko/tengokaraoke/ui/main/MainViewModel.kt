@@ -17,9 +17,6 @@ class MainViewModel : ViewModel() {
     private val _uiStateData = MutableStateFlow<UIState<VideoResponse>>(UIState.Loading)
     val stateData: StateFlow<UIState<VideoResponse>> = _uiStateData
 
-//    private val _sugerenciasState = MutableStateFlow<UIState<VideoResponse>>(UIState.Empty)
-//    val sugerenciasState: StateFlow<UIState<VideoResponse>> = _sugerenciasState\
-
     private val _sugerenciasState = MutableStateFlow<UIState<List<String>>>(UIState.Empty)
     val sugerenciasState: StateFlow<UIState<List<String>>> = _sugerenciasState
 
@@ -57,47 +54,25 @@ class MainViewModel : ViewModel() {
         }
     }
 
-//    fun getSugerencias(busquedaUsuario: String) {
-//        viewModelScope.launch {
-//            try {
-//                val randomKey = misApiKeys.random()
-//                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, randomKey)
-//                if (call.isSuccessful) {
-//                    call.body()?.let { it ->
-//                        _sugerenciasState.value = UIState.Success(it)
-//                    }
-//                } else {
-//                    _sugerenciasState.value =
-//                        UIState.Error("Error call: ${call.code()} - ${call.message()} - ${call.errorBody()} - ${call.message()}")
-//                }
-//            } catch (e: Exception) {
-//                _sugerenciasState.value = UIState.Error(e.localizedMessage ?: "Unknown error")
-//            }
-//        }
-//    }
-
     fun getSugerencias(query: String) {
         viewModelScope.launch {
             try {
-                // Llamamos a la nueva API
+
                 val responseBody = retrofit.getHost().getAutocomplete(query = query)
                 val jsonString = responseBody.string()
 
-                // Parseo manual del JSON (es un array simple)
                 val jsonArray = org.json.JSONArray(jsonString)
-                val suggestionsArray = jsonArray.getJSONArray(1) // El índice 1 tiene la lista
+                val suggestionsArray = jsonArray.getJSONArray(1)
 
                 val cleanSuggestions = mutableListOf<String>()
                 for (i in 0 until suggestionsArray.length()) {
                     cleanSuggestions.add(suggestionsArray.getString(i))
                 }
 
-                // Enviamos la lista limpia
                 _sugerenciasState.value = UIState.Success(cleanSuggestions)
 
             } catch (e: Exception) {
                 Log.e("ViewModel", "Error sugerencias: ${e.message}")
-                // Si falla, simplemente no mostramos nada
                 _sugerenciasState.value = UIState.Empty
             }
         }

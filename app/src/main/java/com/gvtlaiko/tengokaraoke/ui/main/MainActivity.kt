@@ -19,6 +19,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -113,35 +114,6 @@ class MainActivity : AppCompatActivity() {
 
     var searchJob: Job? = null
 
-    private val sessionManagerListener = object : SessionManagerListener<CastSession> {
-        override fun onSessionStarted(session: CastSession, sessionId: String) {
-            castSession = session
-            invalidateOptionsMenu()
-
-            if (actualVideo != null && reproductorEnUso) {
-                loadRemoteMedia(actualVideo!!)
-            }
-        }
-
-        override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
-            castSession = session
-            invalidateOptionsMenu()
-        }
-
-        override fun onSessionEnded(session: CastSession, error: Int) {
-            castSession = null
-            invalidateOptionsMenu()
-        }
-
-        override fun onSessionSuspended(session: CastSession, reason: Int) {}
-        override fun onSessionStarting(session: CastSession) {}
-        override fun onSessionStartFailed(session: CastSession, error: Int) {}
-        override fun onSessionEnding(session: CastSession) {}
-        override fun onSessionResuming(session: CastSession, sessionId: String) {}
-        override fun onSessionResumeFailed(session: CastSession, error: Int) {}
-    }
-
-
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -154,78 +126,79 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        try {
-            castContext = CastContext.getSharedInstance(this)
-            iniciarCastPlayer()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error inicializando CastContext: ${e.message}")
-        }
-
         val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)
 
         if (!isUnlocked) {
+            binding.lvContenedor?.isVisible = false
             showPasswordDialog(sharedPref)
         } else {
+            binding.lvContenedor?.isVisible = true
             startAppComponents()
         }
 
     }
 
     private fun showPasswordDialog(sharedPref: SharedPreferences) {
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        val params = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_login, null)
 
-        val marginPixel =
-            resources.getDimensionPixelSize(R.dimen.grid_item_spacing) // O usa 50 si da error
-        params.setMargins(marginPixel, 0, marginPixel, 0)
-        layout.layoutParams = params
-        layout.setPadding(marginPixel, marginPixel, marginPixel, marginPixel)
-
-
-        val etUser = EditText(this)
-        etUser.hint = "Usuario"
-        etUser.inputType = InputType.TYPE_CLASS_TEXT
-        layout.addView(etUser)
-
-        val etPassword = EditText(this)
-        etPassword.hint = "Contraseña"
-        etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        layout.addView(etPassword)
-
-        AlertDialog.Builder(this)
-            .setTitle("Activación Requerida")
-            .setMessage("Ingrese sus credenciales para habilitar la aplicación.")
-            .setView(layout)
+        val builder = AlertDialog.Builder(this)
+            .setView(dialogView)
             .setCancelable(false)
-            .setPositiveButton("Ingresar") { _, _ ->
-                val user = etUser.text.toString().trim()
-                val password = etPassword.text.toString().trim()
 
-                if (user == APP_USER && password == APP_PASSWORD) {
+        val dialog = builder.create()
 
-                    with(sharedPref.edit()) {
-                        putBoolean(KEY_IS_UNLOCKED, true)
-                        apply()
-                    }
-                    startAppComponents()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
 
-                } else {
-                    finish()
+        val etUser = dialogView.findViewById<EditText>(R.id.etUser)
+        val etPassword = dialogView.findViewById<EditText>(R.id.etPassword)
+        val btnLogin = dialogView.findViewById<Button>(R.id.btnLogin)
+        val btnExit = dialogView.findViewById<Button>(R.id.btnExit)
+
+        btnLogin.setOnClickListener {
+            val user = etUser.text.toString().trim()
+            val password = etPassword.text.toString().trim()
+
+            if (user == APP_USER && password == APP_PASSWORD) {
+                with(sharedPref.edit()) {
+                    putBoolean(KEY_IS_UNLOCKED, true)
+                    apply()
                 }
+                dialog.dismiss()
+                startAppComponents()
+            } else {
+                etPassword.text.clear()
+                etPassword.error = "Credenciales incorrectas"
+                etPassword.requestFocus()
+
+                // Opcional: Pequeña animación de error en el campo
+                etPassword.animate()
+                    .translationX(10f)
+                    .setDuration(50)
+                    .withEndAction {
+                        etPassword.animate().translationX(0f).start()
+                    }.start()
             }
-            .setNegativeButton("Salir") { _, _ ->
-                finish()
+        }
+
+        btnExit.setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+
+        etPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                btnLogin.performClick()
+                true
+            } else {
+                false
             }
-            .show()
+        }
     }
 
     private fun startAppComponents() {
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
 
         setupUI()
         setupRecycler()
@@ -271,34 +244,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.show()
-    }
-
-    private fun iniciarCastPlayer() {
-        val mediaRouteButton = findViewById<MediaRouteButton>(R.id.ivShare)
-        CastButtonFactory.setUpMediaRouteButton(applicationContext, mediaRouteButton)
-    }
-
-    private fun loadRemoteMedia(video: Item) {
-        Log.i(TAG, "Cast: $video")
-        if (castSession == null) {
-            return
-        }
-
-        youTubePlayer?.pause()
-
-        val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
-        movieMetadata.putString(MediaMetadata.KEY_TITLE, video.snippet.title)
-        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, video.snippet.channelTitle)
-        movieMetadata.addImage(WebImage(Uri.parse(video.snippet.thumbnails.high.url)))
-
-        val mediaInfo = MediaInfo.Builder(video.id.videoId)
-            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-            .setContentType("videos/mp4")
-            .setMetadata(movieMetadata)
-            .build()
-
-        val remoteMediaClient = castSession!!.remoteMediaClient
-        remoteMediaClient?.load(mediaInfo, true)
     }
 
     private fun setupYoutubePlayer() {
@@ -746,22 +691,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         youTubePlayerView.release()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        castContext.sessionManager.addSessionManagerListener(
-            sessionManagerListener,
-            CastSession::class.java
-        )
-    }
-
-    override fun onPause() {
-        super.onPause()
-        castContext.sessionManager.removeSessionManagerListener(
-            sessionManagerListener,
-            CastSession::class.java
-        )
     }
 
 }
