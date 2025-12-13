@@ -19,6 +19,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -120,64 +121,71 @@ class MainActivity : AppCompatActivity() {
         val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)
 
         if (!isUnlocked) {
+            binding.lvContenedor?.isVisible = false
             showPasswordDialog(sharedPref)
         } else {
+            binding.lvContenedor?.isVisible = true
             startAppComponents()
         }
 
     }
 
-
     private fun showPasswordDialog(sharedPref: SharedPreferences) {
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        val params = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_login, null)
 
-        val marginPixel =
-            resources.getDimensionPixelSize(R.dimen.grid_item_spacing) // O usa 50 si da error
-        params.setMargins(marginPixel, 0, marginPixel, 0)
-        layout.layoutParams = params
-        layout.setPadding(marginPixel, marginPixel, marginPixel, marginPixel)
-
-
-        val etUser = EditText(this)
-        etUser.hint = "Usuario"
-        etUser.inputType = InputType.TYPE_CLASS_TEXT
-        layout.addView(etUser)
-
-        val etPassword = EditText(this)
-        etPassword.hint = "Contraseña"
-        etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        layout.addView(etPassword)
-
-        AlertDialog.Builder(this)
-            .setTitle("Activación Requerida")
-            .setMessage("Ingrese sus credenciales para habilitar la aplicación.")
-            .setView(layout)
+        val builder = AlertDialog.Builder(this)
+            .setView(dialogView)
             .setCancelable(false)
-            .setPositiveButton("Ingresar") { _, _ ->
-                val user = etUser.text.toString().trim()
-                val password = etPassword.text.toString().trim()
 
-                if (user == APP_USER && password == APP_PASSWORD) {
+        val dialog = builder.create()
 
-                    with(sharedPref.edit()) {
-                        putBoolean(KEY_IS_UNLOCKED, true)
-                        apply()
-                    }
-                    startAppComponents()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.show()
 
-                } else {
-                    finish()
+        val etUser = dialogView.findViewById<EditText>(R.id.etUser)
+        val etPassword = dialogView.findViewById<EditText>(R.id.etPassword)
+        val btnLogin = dialogView.findViewById<Button>(R.id.btnLogin)
+        val btnExit = dialogView.findViewById<Button>(R.id.btnExit)
+
+        btnLogin.setOnClickListener {
+            val user = etUser.text.toString().trim()
+            val password = etPassword.text.toString().trim()
+
+            if (user == APP_USER && password == APP_PASSWORD) {
+                with(sharedPref.edit()) {
+                    putBoolean(KEY_IS_UNLOCKED, true)
+                    apply()
                 }
+                dialog.dismiss()
+                startAppComponents()
+            } else {
+                etPassword.text.clear()
+                etPassword.error = "Credenciales incorrectas"
+                etPassword.requestFocus()
+
+                // Opcional: Pequeña animación de error en el campo
+                etPassword.animate()
+                    .translationX(10f)
+                    .setDuration(50)
+                    .withEndAction {
+                        etPassword.animate().translationX(0f).start()
+                    }.start()
             }
-            .setNegativeButton("Salir") { _, _ ->
-                finish()
+        }
+
+        btnExit.setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+
+        etPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                btnLogin.performClick()
+                true
+            } else {
+                false
             }
-            .show()
+        }
     }
 
     private fun startAppComponents() {
@@ -208,12 +216,26 @@ class MainActivity : AppCompatActivity() {
     private fun setupTVNavigation() {
         val focusListener = View.OnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
-                v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(150).start()
+                v.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).start()
                 v.elevation = 10f
             } else {
                 v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
                 v.elevation = 0f
             }
+        }
+
+        binding.edtxtBusquedaUsuario?.apply {
+            onFocusChangeListener = focusListener
+            isFocusable = true
+            isFocusableInTouchMode = true
+
+            setOnClickListener { view ->
+                view.requestFocus() // Aseguramos que tenga el foco
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                // SHOW_IMPLICIT suele funcionar mejor para mostrarlo programáticamente
+                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            }
+
         }
 
         binding.ivSearch?.apply {

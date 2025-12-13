@@ -1,10 +1,12 @@
 package com.gvtlaiko.tengokaraoke.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.gvtlaiko.tengokaraoke.R
 import com.gvtlaiko.tengokaraoke.core.ItemDiffCallback
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
 import com.gvtlaiko.tengokaraoke.databinding.CardItemBinding
@@ -54,25 +56,52 @@ class VideoEnColaAdapter(
         }
 
         fun render(item: Item) {
-            itemView.isFocusable = true // <--- CRÍTICO PARA TV
-            itemView.isFocusableInTouchMode = true
+            itemView.isFocusable = false
+            itemView.isFocusableInTouchMode = false
+            itemView.isClickable = false
+
             with(binding) {
                 tvIdVideo.text = item.id.videoId
                 tvTitle.text = item.snippet.title
                 tvLastMessage.text = item.snippet.channelTitle
                 Glide.with(ivCard.context).load(item.snippet.thumbnails.high.url).into(ivCard)
+
+                containerInfoPlay.setOnClickListener {
+                    // Usamos bindingAdapterPosition en lugar del deprecated adapterPosition
+                    if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                        onItemClick(item, bindingAdapterPosition)
+                    }
+                }
+
+                containerInfoPlay.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+                    if (hasFocus) {
+                        v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(150).start()
+                        v.elevation = 8f
+                        v.background = null
+                    } else {
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
+                        v.elevation = 0f
+                        v.background = null
+                    }
+                }
+
+                // --- ZONA 2: REMOVE (Botón de Basura) ---
+                ivRemoveItem.setOnClickListener {
+                    if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                        onRemoveClick(item, bindingAdapterPosition)
+                    }
+                }
+
+                // Animación de foco para el botón de borrar
+                ivRemoveItem.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+                    if (hasFocus) {
+                        v.animate().scaleX(1.3f).scaleY(1.3f).setDuration(150).start()
+                    } else {
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
+                    }
+                }
             }
         }
     }
-
-//    fun actualizarVideos(nuevosVideos: List<Item>) {
-//        val diffCallback = ItemDiffCallback(this.videos, nuevosVideos)
-//        val diffResult = DiffUtil.calculateDiff(diffCallback)
-//
-//        this.videos.clear()
-//        this.videos.addAll(nuevosVideos)
-//
-//        diffResult.dispatchUpdatesTo(this)
-//    }
 
 }
