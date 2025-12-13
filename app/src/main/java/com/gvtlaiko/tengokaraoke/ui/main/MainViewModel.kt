@@ -23,6 +23,8 @@ class MainViewModel : ViewModel() {
     private val _sugerenciasState = MutableStateFlow<UIState<List<String>>>(UIState.Empty)
     val sugerenciasState: StateFlow<UIState<List<String>>> = _sugerenciasState
 
+    private var currentKeyIndex = 0
+
     val misApiKeys = listOf(
         "AIzaSyBFaVSE-n5rgORlvwn8iMTSKPgCKB9c1R0",
         "AIzaSyBKOWMJQtywrNVD_K9EI2ekwSiyfGhobsc",
@@ -37,9 +39,12 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             _uiStateData.value = UIState.Loading
             try {
-                val randomKey = misApiKeys.random()
+                val currentKey = misApiKeys[currentKeyIndex]
 
-                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, randomKey)
+                Log.i("MainActivity", "Usando Key [$currentKeyIndex]: $currentKey")
+                currentKeyIndex = (currentKeyIndex + 1) % misApiKeys.size
+
+                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, currentKey)
                 if (call.isSuccessful) {
                     call.body()?.let { it ->
                         _uiStateData.value = UIState.Success(it)
