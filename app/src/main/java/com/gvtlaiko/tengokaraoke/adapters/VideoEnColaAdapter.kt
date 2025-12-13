@@ -54,6 +54,8 @@ class VideoEnColaAdapter(
         }
 
         fun render(item: Item) {
+            itemView.isFocusable = true // <--- CRÍTICO PARA TV
+            itemView.isFocusableInTouchMode = true
             with(binding) {
                 tvIdVideo.text = item.id.videoId
                 tvTitle.text = item.snippet.title
