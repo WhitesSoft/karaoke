@@ -45,14 +45,4 @@ class VideoAdapter(
         }
     }
 
-//    fun actualizarVideos(nuevosVideos: List<Item>) {
-//        val diffCallback = ItemDiffCallback(this.videos, nuevosVideos)
-//        val diffResult = DiffUtil.calculateDiff(diffCallback)
-//
-//        this.videos.clear()
-//        this.videos.addAll(nuevosVideos)
-//
-//        diffResult.dispatchUpdatesTo(this)
-//    }
-
 }

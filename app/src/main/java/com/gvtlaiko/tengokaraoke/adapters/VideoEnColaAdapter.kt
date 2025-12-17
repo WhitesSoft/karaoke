@@ -37,7 +37,6 @@ class VideoEnColaAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            // Listener para el ícono de eliminar
             binding.ivRemoveItem.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -62,15 +61,5 @@ class VideoEnColaAdapter(
             }
         }
     }
-
-//    fun actualizarVideos(nuevosVideos: List<Item>) {
-//        val diffCallback = ItemDiffCallback(this.videos, nuevosVideos)
-//        val diffResult = DiffUtil.calculateDiff(diffCallback)
-//
-//        this.videos.clear()
-//        this.videos.addAll(nuevosVideos)
-//
-//        diffResult.dispatchUpdatesTo(this)
-//    }
 
 }

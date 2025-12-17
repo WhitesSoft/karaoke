@@ -6,10 +6,8 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -22,8 +20,6 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -37,17 +33,10 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.mediarouter.app.MediaRouteButton
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.gms.cast.MediaInfo
-import com.google.android.gms.cast.MediaMetadata
-import com.google.android.gms.cast.framework.CastButtonFactory
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
-import com.google.android.gms.cast.framework.SessionManagerListener
-import com.google.android.gms.common.images.WebImage
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gvtlaiko.tengokaraoke.R
 import com.gvtlaiko.tengokaraoke.adapters.GridSpacingItemDecoration
 import com.gvtlaiko.tengokaraoke.adapters.SugerenciasAdapter
@@ -172,7 +161,6 @@ class MainActivity : AppCompatActivity() {
                 etPassword.error = "Credenciales incorrectas"
                 etPassword.requestFocus()
 
-                // Opcional: Pequeña animación de error en el campo
                 etPassword.animate()
                     .translationX(10f)
                     .setDuration(50)
@@ -306,9 +294,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupPlayerControles() {
-//        binding.ivNextVideo?.setOnClickListener {
-//            iniciarReproduccionEnCola()
-//        }
 
         binding.ivReplay?.setOnClickListener {
             youTubePlayer?.let { player ->
@@ -341,25 +326,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        binding.ivShare?.setOnClickListener {
-//
-//            if (castSession != null && castSession!!.isConnected) {
-//                if (actualVideo != null)
-//                    loadRemoteMedia(actualVideo!!)
-//            }
-//
-////            if (actualVideoId == null) {
-////                Toast.makeText(this, "No hay video para compartir", Toast.LENGTH_SHORT).show()
-////                return@setOnClickListener
-////            }
-////            val videoUrl = "https://www.youtube.com/watch?v=$actualVideoId"
-////            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-////                type = "text/plain"
-////                putExtra(Intent.EXTRA_TEXT, videoUrl)
-////            }
-////            startActivity(Intent.createChooser(shareIntent, "Compartir video"))
-//        }
-
         binding.ivFullscreen?.setOnClickListener {
             if (isPlayerFullscreen) {
                 exitCustomFullscreen()
@@ -368,22 +334,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        binding.ivVolumeDown?.setOnClickListener {
-//            audioManager.adjustStreamVolume(
-//                AudioManager.STREAM_MUSIC,
-//                AudioManager.ADJUST_LOWER,
-//                AudioManager.FLAG_SHOW_UI
-//            )
-//        }
-//
-//
-//        binding.ivVolumeUp?.setOnClickListener {
-//            audioManager.adjustStreamVolume(
-//                AudioManager.STREAM_MUSIC,
-//                AudioManager.ADJUST_RAISE,
-//                AudioManager.FLAG_SHOW_UI
-//            )
-//        }
         binding.ivSearch?.setOnClickListener {
             realizarBusqueda()
         }
@@ -479,7 +429,6 @@ class MainActivity : AppCompatActivity() {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(binding.edtxtBusquedaUsuario?.windowToken, 0)
 
-
             Log.i(TAG, "Iniciando búsqueda con query: $query")
             mainViewModel.getVideos(query)
         }
@@ -516,7 +465,6 @@ class MainActivity : AppCompatActivity() {
 
                 realizarBusqueda()
 
-                // Oculta el teclado
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(textView.windowToken, 0)
 
