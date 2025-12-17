@@ -4,13 +4,6 @@ import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
-/**
- * Un ItemDecoration para añadir espaciado a un RecyclerView con GridLayoutManager.
- *
- * @param spanCount El número de columnas en el grid.
- * @param spacing El espaciado en píxeles.
- * @param includeEdge Booleano para incluir o no el espaciado en los bordes del RecyclerView.
- */
 class GridSpacingItemDecoration(
     private val spanCount: Int,
     private val spacing: Int,

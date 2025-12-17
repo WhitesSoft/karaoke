@@ -10,7 +10,7 @@ import com.gvtlaiko.tengokaraoke.R
 
 class SugerenciasAdapter(
     context: Context,
-    private val sugerencias: List<String>
+    sugerencias: List<String>
 ) : ArrayAdapter<String>(context, 0, sugerencias) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

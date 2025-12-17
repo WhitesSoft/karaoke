@@ -3,13 +3,9 @@ package com.gvtlaiko.tengokaraoke.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.gvtlaiko.tengokaraoke.R
-import com.gvtlaiko.tengokaraoke.core.ItemDiffCallback
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
-import com.gvtlaiko.tengokaraoke.databinding.CardItemBinding
 import com.gvtlaiko.tengokaraoke.databinding.CardItemVideoColaBinding
 
 class VideoEnColaAdapter(
@@ -39,7 +35,7 @@ class VideoEnColaAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            // Listener para el ícono de eliminar
+
             binding.ivRemoveItem.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -67,7 +63,6 @@ class VideoEnColaAdapter(
                 Glide.with(ivCard.context).load(item.snippet.thumbnails.high.url).into(ivCard)
 
                 containerInfoPlay.setOnClickListener {
-                    // Usamos bindingAdapterPosition en lugar del deprecated adapterPosition
                     if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                         onItemClick(item, bindingAdapterPosition)
                     }
@@ -85,14 +80,12 @@ class VideoEnColaAdapter(
                     }
                 }
 
-                // --- ZONA 2: REMOVE (Botón de Basura) ---
                 ivRemoveItem.setOnClickListener {
                     if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                         onRemoveClick(item, bindingAdapterPosition)
                     }
                 }
 
-                // Animación de foco para el botón de borrar
                 ivRemoveItem.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
                     if (hasFocus) {
                         v.animate().scaleX(1.3f).scaleY(1.3f).setDuration(150).start()

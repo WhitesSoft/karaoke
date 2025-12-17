@@ -8,7 +8,6 @@ import android.graphics.drawable.ColorDrawable
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -22,7 +21,6 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -163,7 +161,6 @@ class MainActivity : AppCompatActivity() {
                 etPassword.error = "Credenciales incorrectas"
                 etPassword.requestFocus()
 
-                // Opcional: Pequeña animación de error en el campo
                 etPassword.animate()
                     .translationX(10f)
                     .setDuration(50)
@@ -230,9 +227,8 @@ class MainActivity : AppCompatActivity() {
             isFocusableInTouchMode = true
 
             setOnClickListener { view ->
-                view.requestFocus() // Aseguramos que tenga el foco
+                view.requestFocus()
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                // SHOW_IMPLICIT suele funcionar mejor para mostrarlo programáticamente
                 imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
             }
 
@@ -261,7 +257,6 @@ class MainActivity : AppCompatActivity() {
         binding.swKaraoke?.onFocusChangeListener = focusListener
         binding.edtxtBusquedaUsuario?.onFocusChangeListener = focusListener
 
-        // Opcional: dar foco inicial a un elemento
         binding.ivLowVideo?.requestFocus()
     }
 
@@ -421,10 +416,8 @@ class MainActivity : AppCompatActivity() {
         playerOriginalParent = binding.frameContainer
         playerOriginalLayoutParams = youTubePlayerView.layoutParams as FrameLayout.LayoutParams
 
-        // Ocultamos todo lo demás
         binding.lvContenedor?.visibility = View.GONE
 
-        // Añadimos el player a la raiz
         playerOriginalParent?.removeView(youTubePlayerView)
         binding.main.addView(youTubePlayerView, ConstraintLayout.LayoutParams(
             ConstraintLayout.LayoutParams.MATCH_PARENT,
@@ -444,7 +437,6 @@ class MainActivity : AppCompatActivity() {
         playerOriginalParent = null
         isPlayerFullscreen = false
 
-        // Devolver foco a algún botón
         binding.ivFullscreen?.requestFocus()
     }
 
@@ -503,18 +495,16 @@ class MainActivity : AppCompatActivity() {
         binding.edtxtBusquedaUsuario?.setAdapter(adapterVideosSugerencias)
         setupSearchListener(binding.edtxtBusquedaUsuario!!)
 
-        // En TV, cuando dan "Enter" en el teclado virtual
         binding.edtxtBusquedaUsuario?.setOnEditorActionListener { textView, actionId, keyEvent ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                 actionId == EditorInfo.IME_ACTION_DONE ||
                 keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) {
 
                 realizarBusqueda()
-                // Ocultar teclado
+
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(textView.windowToken, 0)
 
-                // Mover el foco a los resultados automáticamente para mejor UX
                 binding.rv.requestFocus()
                 return@setOnEditorActionListener true
             }
