@@ -50,9 +50,18 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.ServiceList.YouTube
+import org.schabi.newpipe.extractor.localization.ContentCountry
+import org.schabi.newpipe.extractor.localization.Localization
+import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
+import org.schabi.newpipe.extractor.stream.StreamInfoItem
 
 class MainActivity : AppCompatActivity() {
 
@@ -72,8 +81,6 @@ class MainActivity : AppCompatActivity() {
     private var actualVideo: Item? = null
 
     private lateinit var audioManager: AudioManager
-    private lateinit var castContext: CastContext
-    private var castSession: CastSession? = null
 
     // --- CONFIGURACIÓN DE SEGURIDAD ---
     private val PREFS_NAME = "AppConfig"
@@ -114,6 +121,12 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        NewPipe.init(
+            DownloaderImpl.getInstance(),
+            Localization("US", "es"),
+            ContentCountry("US")
+        )
 
         val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)
@@ -560,6 +573,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+
                         else -> {}
                     }
                 }

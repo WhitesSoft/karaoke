@@ -4,11 +4,21 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gvtlaiko.tengokaraoke.core.UIState
+import com.gvtlaiko.tengokaraoke.data.models.response.Id
+import com.gvtlaiko.tengokaraoke.data.models.response.Item
+import com.gvtlaiko.tengokaraoke.data.models.response.Snippet
+import com.gvtlaiko.tengokaraoke.data.models.response.Thumbnail
+import com.gvtlaiko.tengokaraoke.data.models.response.Thumbnails
 import com.gvtlaiko.tengokaraoke.data.models.response.VideoResponse
 import com.gvtlaiko.tengokaraoke.data.network.RetrofitModule
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
+import org.schabi.newpipe.extractor.stream.StreamInfoItem
 
 class MainViewModel : ViewModel() {
 
@@ -56,26 +66,66 @@ class MainViewModel : ViewModel() {
     )
 
     fun getVideos(busquedaUsuario: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiStateData.value = UIState.Loading
             try {
-                val currentKey = misApiKeys[currentKeyIndex]
-                Log.i("MainActivity", "Usando Key [$currentKeyIndex]: $currentKey")
-                currentKeyIndex = (currentKeyIndex + 1) % misApiKeys.size
-                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, currentKey)
-                if (call.isSuccessful) {
-                    call.body()?.let { it ->
-                        _uiStateData.value = UIState.Success(it)
+                // 1. Usamos NewPipe para buscar
+                val serviceId = ServiceList.YouTube.serviceId
+                val searchExtractor = NewPipe.getService(serviceId)
+                    .getSearchExtractor(
+                        busquedaUsuario,
+                        listOf(YoutubeSearchQueryHandlerFactory.VIDEOS),
+                        null
+                    )
+
+                searchExtractor.fetchPage()
+                val newPipeItems = searchExtractor.initialPage.items
+
+                // 2. Convertimos los resultados de NewPipe a tu clase 'Item'
+                // para que el Adapter no se rompa.
+                val listaConvertida = newPipeItems.mapNotNull { item ->
+                    if (item is StreamInfoItem) {
+                        mapNewPipeItemToAppItem(item)
+                    } else {
+                        null
                     }
-                } else {
-                    _uiStateData.value =
-                        UIState.Error("Error call: ${call.code()} - ${call.message()} - ${call.errorBody()} - ${call.message()}")
                 }
+
+                // 3. Empaquetamos en tu VideoResponse y enviamos
+                // Asumo que VideoResponse tiene un constructor que acepta la lista
+                // Si VideoResponse es de la librería de Google, tendrás que crear una clase wrapper propia.
+                val response = VideoResponse(listaConvertida)
+                _uiStateData.value = UIState.Success(response)
+
             } catch (e: Exception) {
-                _uiStateData.value = UIState.Error(e.localizedMessage ?: "Unknown error")
+                e.printStackTrace()
+                _uiStateData.value = UIState.Error("Error NewPipe: ${e.localizedMessage}")
             }
         }
     }
+
+
+//    fun getVideos(busquedaUsuario: String) {
+//        viewModelScope.launch {
+//            _uiStateData.value = UIState.Loading
+//            try {
+//                val currentKey = misApiKeys[currentKeyIndex]
+//                Log.i("MainActivity", "Usando Key [$currentKeyIndex]: $currentKey")
+//                currentKeyIndex = (currentKeyIndex + 1) % misApiKeys.size
+//                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, currentKey)
+//                if (call.isSuccessful) {
+//                    call.body()?.let { it ->
+//                        _uiStateData.value = UIState.Success(it)
+//                    }
+//                } else {
+//                    _uiStateData.value =
+//                        UIState.Error("Error call: ${call.code()} - ${call.message()} - ${call.errorBody()} - ${call.message()}")
+//                }
+//            } catch (e: Exception) {
+//                _uiStateData.value = UIState.Error(e.localizedMessage ?: "Unknown error")
+//            }
+//        }
+//    }
 
     fun getSugerencias(query: String) {
         viewModelScope.launch {
@@ -99,6 +149,30 @@ class MainViewModel : ViewModel() {
                 _sugerenciasState.value = UIState.Empty
             }
         }
+    }
+
+    private fun mapNewPipeItemToAppItem(streamItem: StreamInfoItem): Item {
+        // Extraemos el ID limpio (NewPipe da la URL completa)
+        val videoIdClean = streamItem.url.replace("https://www.youtube.com/watch?v=", "")
+
+        // Construimos tu objeto Id
+        val idObj = Id(videoId = videoIdClean)
+
+        // Construimos el objeto Thumbnails (ajusta según tu clase)
+        val thumbUrl = streamItem.thumbnails.lastOrNull()?.url ?: ""
+        val highThumb = Thumbnail(url = thumbUrl)
+        val thumbnailsObj = Thumbnails(high = highThumb)
+
+        // Construimos el Snippet
+        val snippetObj = Snippet(
+            title = streamItem.name,
+            thumbnails = thumbnailsObj,
+            channelTitle = streamItem.uploaderName,
+            description = streamItem.shortDescription ?: ""
+        )
+
+        // Retornamos tu Item completo
+        return Item(id = idObj, snippet = snippetObj)
     }
 
 }
