@@ -11,8 +11,8 @@ android {
         applicationId = "com.gvtlaiko.tengokaraoke"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 4
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -27,6 +27,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -52,6 +53,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.retrofit.okhttp3)
+    implementation(libs.retrofit.okhttp)
 
     implementation(libs.coroutines)
     implementation(libs.androidx.lifecycle)
@@ -62,5 +64,9 @@ dependencies {
     implementation(libs.android.youtube)
 
     implementation(libs.chromecast)
+
+    implementation(libs.newpipe)
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
 }

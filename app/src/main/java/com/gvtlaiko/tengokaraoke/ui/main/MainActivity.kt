@@ -52,6 +52,9 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTube
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.localization.ContentCountry
+import org.schabi.newpipe.extractor.localization.Localization
 
 class MainActivity : AppCompatActivity() {
 
@@ -114,6 +117,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         hideSystemUI()
+
+        NewPipe.init(
+            DownloaderImpl.getInstance(),
+            Localization("US", "es"),
+            ContentCountry("US")
+        )
 
         val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)

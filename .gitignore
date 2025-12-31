@@ -1,15 +1,50 @@
+# --- Android Studio y Gradle (Build) ---
+.gradle/
+build/
+/app/build/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# --- Configuración Local (IMPORTANTE) ---
+# Contiene la ruta del SDK y configuraciones específicas de tu máquina
 local.properties
+
+# --- Archivos del IDE (IntelliJ / Android Studio) ---
+.idea/workspace.xml
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/codeStyles
+.idea/dictionaries
+.idea/tasks.xml
+# A veces es mejor ignorar la carpeta .idea completa, pero
+# mantener los diccionarios o estilos de código si el equipo los comparte.
+# Si prefieres ignorar todo lo de Android Studio, descomenta la siguiente línea:
+# .idea/
+
+# --- Archivos de Sistema Operativo ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Android NDK (C++ / Nativo) ---
+.externalNativeBuild
+.cxx/
+
+# --- Capturas y Análisis de Rendimiento ---
+/captures
+*.hprof
+
+# --- Google Services (Opcional) ---
+# Si tu proyecto es público (Open Source), NO subas este archivo.
+# Si es un repositorio privado de empresa, suele ser seguro subirlo.
+# google-services.json
+
+# --- Claves de firma y Seguridad (CRÍTICO) ---
+# NUNCA subas tus llaves privadas o keystores
+*.jks
+*.keystore
+*.pem
+*.p12
+key.properties
