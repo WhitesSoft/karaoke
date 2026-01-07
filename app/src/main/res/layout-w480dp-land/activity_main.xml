@@ -116,36 +116,39 @@
             <FrameLayout
                 android:id="@+id/frame_container"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:background="#000"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:nextFocusLeft="@id/rv"
-                android:nextFocusDown="@id/swKaraoke">
+                android:layout_height="350dp"
+                android:background="@android:color/black"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
 
-                <com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-                    android:id="@+id/youtube_player_view"
+                <androidx.media3.ui.PlayerView
+                    android:id="@+id/playerView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:visibility="gone"
-                    app:autoPlay="false" />
+                    app:autoPlay="false"
+                    app:resize_mode="fit"
+                    app:show_buffering="when_playing"
+                    app:use_controller="false" />
 
                 <ImageView
                     android:id="@+id/llContenedorVideo"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/app_name"
                     android:scaleType="centerCrop"
                     android:src="@drawable/logo" />
+
             </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="8dp"
-                android:clipChildren="false"
-                android:clipToPadding="false"
                 android:divider="@drawable/spacer"
-                android:gravity="center"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:padding="12dp">
 
@@ -153,56 +156,102 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
+                    android:divider="@drawable/spacer_buttons"
                     android:gravity="center_vertical|start"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:showDividers="middle">
 
                     <Switch
                         android:id="@+id/swKaraoke"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_marginEnd="12dp"
                         android:checked="true"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusRight="@id/ivLowVideo"
-                        android:nextFocusUp="@id/frame_container"
-                        android:nextFocusDown="@id/rvEnCola"
-                        android:text="KARAOKE "
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
                         android:thumb="@drawable/thumb"
                         android:track="@drawable/track"
                         app:showText="true"
                         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="KARAOKE"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <androidx.mediarouter.app.MediaRouteButton
+                        android:id="@+id/ivShare"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:visibility="gone"
+                        app:mediaRouteButtonTint="@color/white"
+                        app:tint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/ivBajarTonalidad"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_volume_down"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/tvTonalidadVideo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="1.00"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/ivSubirTonalidad"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_volume_up"
+                        app:tint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/ivBucleVideo"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_repeat"
+                        android:visibility="gone"
+                        app:tint="@color/white" />
+
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
-                    android:gravity="center"
+                    android:divider="@drawable/spacer"
+                    android:gravity="end|center"
                     android:orientation="horizontal"
                     android:showDividers="middle">
 
                     <ImageView
                         android:id="@+id/ivLowVideo"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
                         android:background="@drawable/selector_image"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:focusableInTouchMode="false"
-                        android:nextFocusLeft="@id/swKaraoke"
-                        android:nextFocusRight="@id/ivFastVideo"
-                        android:nextFocusUp="@id/frame_container"
-                        android:nextFocusDown="@id/rvEnCola"
+                        android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_low"
                         app:tint="@color/white" />
@@ -211,56 +260,37 @@
                         android:id="@+id/tvFastVideo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="8dp"
-                        android:layout_marginEnd="24dp"
-                        android:focusable="false"
                         android:text="1x"
                         android:textColor="@color/white"
-                        android:textSize="18sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <ImageView
                         android:id="@+id/ivFastVideo"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
                         android:background="@drawable/selector_image"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusLeft="@id/ivLowVideo"
-                        android:nextFocusRight="@id/ivReplay"
-                        android:nextFocusUp="@id/frame_container"
-                        android:nextFocusDown="@id/rvEnCola"
+                        android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_fast_forward"
                         app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/ivReplay"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
                         android:background="@drawable/selector_image"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusLeft="@id/ivFastVideo"
-                        android:nextFocusRight="@id/ivFullscreen"
-                        android:nextFocusUp="@id/frame_container"
-                        android:nextFocusDown="@id/rvEnCola"
+                        android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_replay"
                         app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/ivFullscreen"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
                         android:background="@drawable/selector_image"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusLeft="@id/ivReplay"
-                        android:nextFocusUp="@id/frame_container"
-                        android:nextFocusDown="@id/rvEnCola"
+                        android:contentDescription="Pantalla Completa"
                         android:padding="8dp"
                         android:src="@drawable/ic_open_with"
                         app:tint="@color/white" />

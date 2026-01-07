@@ -1,19 +1,15 @@
 package com.gvtlaiko.tengokaraoke.ui.main
 
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
 import org.schabi.newpipe.extractor.downloader.Downloader
+import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class DownloaderImpl private constructor(builder: OkHttpClient.Builder) : Downloader() {
-
-    private val client: OkHttpClient = builder
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()
 
     companion object {
         private var instance: DownloaderImpl? = null
@@ -26,17 +22,23 @@ class DownloaderImpl private constructor(builder: OkHttpClient.Builder) : Downlo
         }
     }
 
+    val client: OkHttpClient = builder
+        .readTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     @Throws(IOException::class, ReCaptchaException::class)
-    override fun execute(request: org.schabi.newpipe.extractor.downloader.Request): Response {
+    override fun execute(request: Request): Response {
         val httpMethod = request.httpMethod()
         val url = request.url()
         val headers = request.headers()
         val dataToSend = request.dataToSend()
 
-        val requestBuilder = Request.Builder()
+        val requestBuilder = okhttp3.Request.Builder()
             .url(url)
             .method(httpMethod, dataToSend?.toRequestBody())
 
+        // Añadir cabeceras que pide NewPipe
         headers.forEach { (key, list) ->
             list.forEach { value ->
                 requestBuilder.addHeader(key, value)
@@ -58,4 +60,10 @@ class DownloaderImpl private constructor(builder: OkHttpClient.Builder) : Downlo
             response.request.url.toString()
         )
     }
+
+    // Método helper para convertir byte[] a RequestBody si es necesario
+    private fun ByteArray.toRequestBody(): RequestBody {
+        return RequestBody.create(null, this)
+    }
+
 }

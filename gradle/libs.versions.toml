@@ -17,7 +17,8 @@ lifecycle = "2.9.4"
 glidev = "5.0.5"
 youtube = "13.0.0"
 chromecast = "21.4.0"
-pipe = "v0.24.0"
+pipe = "v0.24.8"
+exoplayer = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,9 @@ glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", versi
 android-youtube = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtube" }
 chromecast = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "chromecast" }
 newpipe = { group = "com.github.TeamNewPipe", name = "NewPipeExtractor", version.ref = "pipe" }
+exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "exoplayer" }
+exoplayer-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "exoplayer" }
+exoplayer-common = { group = "androidx.media3", name = "media3-common", version.ref = "exoplayer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
