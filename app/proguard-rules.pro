@@ -21,8 +21,8 @@
 #-renamesourcefileattribute SourceFile
 
 
-# Reglas para android-youtube-player (versión 12.1.0)
--keep public class com.pierfrancescosoffritti.androidyoutubeplayer.core.** { *; }
--keep public interface com.pierfrancescosoffritti.androidyoutubeplayer.core.** { *; }
+## Rules for NewPipeExtractor
+-keep class org.mozilla.javascript.** { *; }
+-keep class org.mozilla.classfile.ClassFileWriter
+-dontwarn org.mozilla.javascript.tools.**
 
--dontwarn com.pierfrancescosoffritti.androidyoutubeplayer.**

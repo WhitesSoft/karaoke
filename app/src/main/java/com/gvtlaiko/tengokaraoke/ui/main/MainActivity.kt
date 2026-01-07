@@ -20,9 +20,11 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -33,10 +35,23 @@ import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player
+import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.gms.cast.framework.CastContext
-import com.google.android.gms.cast.framework.CastSession
 import com.gvtlaiko.tengokaraoke.R
 import com.gvtlaiko.tengokaraoke.adapters.GridSpacingItemDecoration
 import com.gvtlaiko.tengokaraoke.adapters.SugerenciasAdapter
@@ -45,23 +60,14 @@ import com.gvtlaiko.tengokaraoke.adapters.VideoEnColaAdapter
 import com.gvtlaiko.tengokaraoke.core.UIState
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
 import com.gvtlaiko.tengokaraoke.databinding.ActivityMainBinding
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.YouTubePlayerTracker
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.NewPipe
-import org.schabi.newpipe.extractor.ServiceList
-import org.schabi.newpipe.extractor.ServiceList.YouTube
 import org.schabi.newpipe.extractor.localization.ContentCountry
 import org.schabi.newpipe.extractor.localization.Localization
-import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
-import org.schabi.newpipe.extractor.stream.StreamInfoItem
+import java.util.Locale
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -72,13 +78,14 @@ class MainActivity : AppCompatActivity() {
     private val listaVideos = mutableListOf<Item>()
     private val listaVideosEnCola = mutableListOf<Item>()
     private val TAG by lazy { "MainActivity" }
-    private lateinit var youTubePlayerView: YouTubePlayerView
-    private var youTubePlayer: YouTubePlayer? = null
     private var karaoke = true
-    private var reproductorEnUso = false
-    private val playerTracker = YouTubePlayerTracker()
-    private var actualVideoId: String? = null
     private var actualVideo: Item? = null
+
+    private var exoPlayer: ExoPlayer? = null
+
+    // Pitch y Velocidad
+    private var currentPitch: Float = 1.0f // 1.0 es normal. 1.1 es más agudo. 0.9 más grave.
+    private var currentSpeed: Float = 1.0f
 
     private lateinit var audioManager: AudioManager
 
@@ -98,16 +105,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapterVideosSugerencias: ArrayAdapter<String>
     private val sugerenciasVideosList = mutableListOf<String>()
 
-    private val playbackSpeeds = listOf(
-        PlayerConstants.PlaybackRate.RATE_0_25,
-        PlayerConstants.PlaybackRate.RATE_0_5,
-        PlayerConstants.PlaybackRate.RATE_1,
-        PlayerConstants.PlaybackRate.RATE_1_5,
-        PlayerConstants.PlaybackRate.RATE_2
-    )
-    private val speedLabels = listOf("0.25x", "0.5x", "1x", "1.5x", "2x")
-    private var currentSpeedIndex = 2
-
     var searchJob: Job? = null
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -122,13 +119,19 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+//        NewPipe.init(
+//            DownloaderImpl.getInstance(),
+//            Localization("US", "es"),
+//            ContentCountry("US")
+//        )
+        // Inicializar NewPipe globalmente
         NewPipe.init(
-            DownloaderImpl.getInstance(),
-            Localization("US", "es"),
-            ContentCountry("US")
+            DownloaderImpl.getInstance(), // Tu downloader
+            Localization.fromLocale(Locale.getDefault()), // ✅ CORRECCIÓN: Usar fromLocale
+            ContentCountry("US") // Forzar región para evitar bloqueos locales
         )
 
-        val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val sharedPref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val isUnlocked = sharedPref.getBoolean(KEY_IS_UNLOCKED, false)
 
         if (!isUnlocked) {
@@ -204,10 +207,13 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupRecycler()
         setupRecyclerVideosEnCola()
-        setupYoutubePlayer()
+
+        setupExoPlayer()
         setupPlayerControles()
         observarListaVideos()
         observarSugerencias()
+        observarStreamUrl() // newpipe
+
         mainViewModel.getVideos("Musica en tendencia -shorts -tiktok")
 
         val onBackPressedCallback = object : OnBackPressedCallback(true) {
@@ -247,109 +253,199 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun setupYoutubePlayer() {
-
-        lifecycle.addObserver(youTubePlayerView)
-
-        youTubePlayerView.addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
-            override fun onReady(player: YouTubePlayer) {
-                youTubePlayer = player
-                reproductorEnUso = false
-
-                player.addListener(playerTracker)
-
-                if (listaVideosEnCola.isNotEmpty()) {
-                    iniciarReproduccionEnCola()
-                }
+    @OptIn(UnstableApi::class)
+    private fun setupExoPlayer() {
+        // Configuramos el RenderersFactory para permitir el procesador de audio Sonic (Pitch)
+        val renderersFactory = object : DefaultRenderersFactory(this) {
+            override fun buildAudioSink(
+                context: Context,
+                enableFloatOutput: Boolean,
+                enableAudioTrackPlaybackParams: Boolean
+            ): AudioSink? {
+                return DefaultAudioSink.Builder(this@MainActivity)
+                    .setAudioProcessors(arrayOf(SonicAudioProcessor()))
+                    .build()
             }
+        }
 
-            override fun onVideoId(player: YouTubePlayer, videoId: String) {
-                actualVideoId = videoId
-            }
+//        exoPlayer = ExoPlayer.Builder(this, renderersFactory).build()
+        exoPlayer = null
 
-            override fun onStateChange(player: YouTubePlayer, state: PlayerConstants.PlayerState) {
-                when (state) {
-                    PlayerConstants.PlayerState.PLAYING,
-                    PlayerConstants.PlayerState.PAUSED,
-                    PlayerConstants.PlayerState.VIDEO_CUED -> {
-                        reproductorEnUso = true
-                        binding.llContenedorVideo?.isVisible = false
-                        binding.youtubePlayerView.isVisible = true
-                    }
+//        binding.playerView?.player = exoPlayer
+        binding.playerView?.player = null
 
-                    PlayerConstants.PlayerState.ENDED,
-                    PlayerConstants.PlayerState.UNKNOWN,
-                    PlayerConstants.PlayerState.UNSTARTED -> reproductorEnUso =
-                        false
-
-                    else -> {}
-                }
-
-                if (state == PlayerConstants.PlayerState.ENDED) {
+        exoPlayer?.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) {
                     if (isLoopingEnabled) {
-                        youTubePlayer?.seekTo(0f)
-                        youTubePlayer?.play()
+                        exoPlayer?.seekTo(0)
+                        exoPlayer?.play()
                     } else {
                         iniciarReproduccionEnCola()
                     }
                 }
             }
 
-            override fun onError(player: YouTubePlayer, error: PlayerConstants.PlayerError) {
-                super.onError(player, error)
-                Log.e(TAG, "YouTube Player Error: $error")
-                reproductorEnUso = false
-                binding.llContenedorVideo?.isVisible = true
-                binding.youtubePlayerView.isVisible = false
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e(TAG, "ExoPlayer CRITICAL Error: ${error.errorCodeName}", error)
+
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error reproduciendo: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
                 iniciarReproduccionEnCola()
             }
         })
     }
 
+    private fun observarStreamUrl() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.videoUrlState.collect { state ->
+                    when (state) {
+                        is UIState.Loading -> {
+
+                        }
+
+                        is UIState.Success -> {
+                            val url = state.data
+                            playExoPlayer(url)
+                        }
+
+                        is UIState.Error -> {
+                            Log.i(TAG, state.error)
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Error obteniendo video: ${state.error}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            iniciarReproduccionEnCola()
+                        }
+
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun playExoPlayer(url: String) {
+        try {
+            Log.i(TAG, "Iniciando ExoPlayer Oficial con URL: $url")
+
+            exoPlayer?.release()
+
+            // ... (Configuración del UserAgent y DataSource igual que antes) ...
+            val userAgent =
+                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            val dataSourceFactory = DefaultHttpDataSource.Factory()
+                .setUserAgent(userAgent)
+                .setAllowCrossProtocolRedirects(true)
+
+            val mediaItem = MediaItem.fromUri(url)
+
+            exoPlayer = ExoPlayer.Builder(this)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .build()
+
+            binding.playerView?.player = exoPlayer
+            exoPlayer?.setMediaItem(mediaItem)
+            exoPlayer?.prepare()
+            exoPlayer?.playWhenReady = true
+
+            // --- 👇 AQUÍ ESTÁ EL ARREGLO 👇 ---
+
+            // 1. Hacemos visible la pantalla del video
+            binding.playerView?.isVisible = true
+
+            // 2. Ocultamos la imagen del logo que lo está tapando
+            binding.llContenedorVideo?.isVisible = false
+
+            // ----------------------------------
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error: ${e.message}")
+            // Si hay error, volvemos a mostrar el logo
+            binding.playerView?.isVisible = false
+            binding.llContenedorVideo?.isVisible = true
+        }
+
+    }
+
     private fun setupPlayerControles() {
 
+        binding.ivBajarTonalidad?.setOnClickListener {
+            changePitch(-0.05f)
+        }
+
+        binding.ivSubirTonalidad?.setOnClickListener {
+            changePitch(0.05f)
+        }
+
+        binding.ivBajarTonalidad?.setOnLongClickListener {
+            resetPitch()
+            true
+        }
+        binding.ivSubirTonalidad?.setOnLongClickListener {
+            resetPitch()
+            true
+        }
+
         binding.ivReplay?.setOnClickListener {
-            youTubePlayer?.let { player ->
-                player.seekTo(0f)
-                player.play()
-            }
+            exoPlayer?.seekTo(0)
         }
 
         binding.ivBucleVideo?.setOnClickListener {
             isLoopingEnabled = !isLoopingEnabled
-
-            if (isLoopingEnabled) {
-                binding.ivBucleVideo?.setColorFilter(getColor(R.color.primary_dark))
-            } else {
-                binding.ivBucleVideo?.setColorFilter(getColor(R.color.white))
-            }
+            binding.ivBucleVideo?.setColorFilter(
+                if (isLoopingEnabled) getColor(R.color.primary_dark) else getColor(R.color.white)
+            )
         }
 
         binding.ivFastVideo?.setOnClickListener {
-            if (currentSpeedIndex < playbackSpeeds.size - 1) {
-                currentSpeedIndex++
-                updatePlaybackSpeed()
-            }
+            if (currentSpeed < 2.0f)
+                currentSpeed += 0.25f
+            updatePitchAndSpeed()
+            binding.tvFastVideo?.text = "${currentSpeed}x"
         }
 
         binding.ivLowVideo?.setOnClickListener {
-            if (currentSpeedIndex > 0) {
-                currentSpeedIndex--
-                updatePlaybackSpeed()
-            }
+            if (currentSpeed > 0.5f)
+                currentSpeed -= 0.25f
+            updatePitchAndSpeed()
+            binding.tvFastVideo?.text = "${currentSpeed}x"
         }
 
         binding.ivFullscreen?.setOnClickListener {
-            if (isPlayerFullscreen) {
-                exitCustomFullscreen()
-            } else {
-                enterCustomFullscreen()
-            }
+            if (isPlayerFullscreen) exitCustomFullscreen() else enterCustomFullscreen()
         }
 
-        binding.ivSearch?.setOnClickListener {
-            realizarBusqueda()
-        }
+        binding.ivSearch?.setOnClickListener { realizarBusqueda() }
+
+    }
+
+    private fun resetPitch() {
+        currentPitch = 1.0f
+        binding.tvTonalidadVideo?.text = String.format("%.2f", currentPitch)
+        updatePitchAndSpeed()
+        Toast.makeText(this, "Tono Restaurado (Normal)", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun changePitch(delta: Float) {
+        currentPitch += delta
+        // limites (0.5 a 2.0) grave - ardilla
+        currentPitch = currentPitch.coerceIn(0.5f, 2.0f)
+        updatePitchAndSpeed()
+
+        Log.i(TAG, "Nuevo Tono: $currentPitch")
+        binding.tvTonalidadVideo?.text = String.format("%.2f", currentPitch)
+    }
+
+    private fun updatePitchAndSpeed() {
+        val params = PlaybackParameters(currentSpeed, currentPitch)
+        exoPlayer?.playbackParameters = params
     }
 
     private fun hideSystemUI() {
@@ -374,15 +470,21 @@ class MainActivity : AppCompatActivity() {
             window.insetsController?.show(WindowInsets.Type.systemBars())
         } else {
             @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    )
         }
     }
 
     private fun enterCustomFullscreen() {
-        playerOriginalParent = binding.frameContainer
-        playerOriginalLayoutParams = youTubePlayerView.layoutParams as FrameLayout.LayoutParams
+        playerOriginalParent =
+            binding.frameContainer
 
-        playerOriginalParent?.removeView(youTubePlayerView)
+        playerOriginalLayoutParams = binding.playerView?.layoutParams as FrameLayout.LayoutParams
+
+        playerOriginalParent?.removeView(binding.playerView)
 
         val rootLayout = binding.main
         val fullScreenParams = ConstraintLayout.LayoutParams(
@@ -390,42 +492,29 @@ class MainActivity : AppCompatActivity() {
             ConstraintLayout.LayoutParams.MATCH_PARENT
         )
 
-        rootLayout.addView(youTubePlayerView, fullScreenParams)
+        rootLayout.addView(binding.playerView, fullScreenParams)
 
         binding.lvContenedor?.isVisible = false
-
         hideSystemUI()
 
-        binding.ivFullscreen?.setImageResource(R.drawable.ic_close_fullscreen) // Asumiendo que tienes este ícono
+        binding.ivFullscreen?.setImageResource(R.drawable.ic_close_fullscreen)
         isPlayerFullscreen = true
     }
 
     private fun exitCustomFullscreen() {
-        binding.main.removeView(youTubePlayerView)
+        binding.main.removeView(binding.playerView)
 
-        playerOriginalParent?.addView(youTubePlayerView, playerOriginalLayoutParams)
+        playerOriginalParent?.addView(binding.playerView, playerOriginalLayoutParams)
 
         playerOriginalParent = null
         playerOriginalLayoutParams = null
 
         binding.lvContenedor?.isVisible = true
-
         showSystemUI()
 
-        binding.ivFullscreen?.setImageResource(R.drawable.ic_open_with) // Tu ícono original
+        binding.ivFullscreen?.setImageResource(R.drawable.ic_open_with)
         isPlayerFullscreen = false
     }
-
-    private fun updatePlaybackSpeed() {
-        if (youTubePlayer == null) return
-
-        val newSpeedEnum = playbackSpeeds[currentSpeedIndex]
-        val newSpeedLabel = speedLabels[currentSpeedIndex]
-
-        youTubePlayer?.setPlaybackRate(newSpeedEnum)
-        binding.tvFastVideo?.text = newSpeedLabel
-    }
-
 
     private fun realizarBusqueda(textoEspecifico: String? = null) {
 
@@ -439,7 +528,7 @@ class MainActivity : AppCompatActivity() {
                 textoBuscado
             }
 
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(binding.edtxtBusquedaUsuario?.windowToken, 0)
 
             Log.i(TAG, "Iniciando búsqueda con query: $query")
@@ -449,21 +538,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun iniciarReproduccionEnCola() {
         if (listaVideosEnCola.isEmpty()) {
-            reproductorEnUso = false
             binding.llContenedorVideo?.isVisible = true
-            binding.youtubePlayerView.isVisible = false
+            binding.playerView?.isVisible = false
             return
         }
 
         val proximoVideo = listaVideosEnCola.first()
-        actualVideo = proximoVideo
-
-        youTubePlayer?.loadVideo(proximoVideo.id.videoId, 0f)
-
-        listaVideosEnCola.removeAt(0)
-        videoAdapterEnCola.notifyItemRemoved(0)
+        onPlayVideoFromQueue(proximoVideo, 0)
     }
-
 
     @SuppressLint("ResourceType", "UseCompatLoadingForColorStateLists")
     private fun setupUI() {
@@ -499,9 +581,6 @@ class MainActivity : AppCompatActivity() {
             karaoke = isChecked
             realizarBusqueda()
         }
-
-        youTubePlayerView = binding.youtubePlayerView
-
     }
 
     private fun setupSearchListener(autoComplete: AutoCompleteTextView) {
@@ -601,13 +680,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun limpiarTexto(texto: String): String {
-        return androidx.core.text.HtmlCompat.fromHtml(
-            texto,
-            androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY
-        ).toString()
-    }
-
     private fun onClickListener(item: Item) {
         listaVideosEnCola.add(item)
         videoAdapterEnCola.notifyItemInserted(listaVideosEnCola.size - 1)
@@ -638,21 +710,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onPlayVideoFromQueue(item: Item, position: Int) {
-        binding.llContenedorVideo?.isVisible = false
-        binding.youtubePlayerView.isVisible = true
-        reproductorEnUso = true
+        Log.i(TAG, "Solicitando URL para: ${item.snippet.title}")
 
-        youTubePlayer?.loadVideo(item.id.videoId, 0f)
         actualVideo = item
+
+        mainViewModel.getStreamUrl(item.id.videoId)
 
         listaVideosEnCola.removeAt(position)
         videoAdapterEnCola.notifyItemRemoved(position)
-        videoAdapterEnCola.notifyItemRangeChanged(position, listaVideosEnCola.size - position)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        exoPlayer?.pause()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        youTubePlayerView.release()
+        exoPlayer?.release()
+        exoPlayer = null
     }
-
 }

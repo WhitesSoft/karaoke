@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.gvtlaiko.tengokaraoke.core.ItemDiffCallback
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
 import com.gvtlaiko.tengokaraoke.databinding.CardItemBinding
 import com.gvtlaiko.tengokaraoke.databinding.CardItemVideoColaBinding

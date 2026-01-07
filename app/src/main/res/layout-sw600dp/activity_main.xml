@@ -107,6 +107,7 @@
                 android:id="@+id/frame_container"
                 android:layout_width="match_parent"
                 android:layout_height="350dp"
+                android:background="@android:color/black"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent">
@@ -114,13 +115,14 @@
                 <androidx.media3.ui.PlayerView
                     android:id="@+id/playerView"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:visibility="gone"
+                    android:layout_gravity="center"
                     app:autoPlay="false"
                     app:resize_mode="fit"
+                    app:surface_type="surface_view"
                     app:show_buffering="when_playing"
                     app:use_controller="false" />
-
 
                 <ImageView
                     android:id="@+id/llContenedorVideo"
@@ -137,6 +139,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="8dp"
+                android:divider="@drawable/spacer"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -164,8 +167,19 @@
                         android:layout_height="wrap_content"
                         android:text="KARAOKE"
                         android:textColor="@color/white"
-
                         android:textStyle="bold" />
+
+                    <androidx.mediarouter.app.MediaRouteButton
+                        android:id="@+id/ivShare"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:visibility="gone"
+                        app:mediaRouteButtonTint="@color/white"
+                        app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/ivBajarTonalidad"
@@ -215,7 +229,7 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:divider="@drawable/spacer_buttons"
+                    android:divider="@drawable/spacer"
                     android:gravity="end|center"
                     android:orientation="horizontal"
                     android:showDividers="middle">

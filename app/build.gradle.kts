@@ -13,10 +13,11 @@ android {
         applicationId = "com.gvtlaiko.tengokaraoke"
         minSdk = 26
         targetSdk = 36
-        versionCode = 14
-        versionName = "1.3.0"
+        versionCode = 15
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -29,14 +30,13 @@ android {
         }
     }
     compileOptions {
-
         isCoreLibraryDesugaringEnabled = true
 
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     buildFeatures {
         viewBinding = true
@@ -70,7 +70,17 @@ dependencies {
     implementation(libs.chromecast)
 
     implementation(libs.newpipe)
+    implementation("org.mozilla:rhino:1.7.15")
 
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.0.4")
+
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+
+    implementation(libs.exoplayer)
+    implementation(libs.exoplayer.ui)
+    implementation(libs.exoplayer.common)
+    implementation("androidx.media3:media3-datasource-okhttp:1.2.0")
+    implementation("androidx.media3:media3-exoplayer-hls:1.2.0")
 
 }

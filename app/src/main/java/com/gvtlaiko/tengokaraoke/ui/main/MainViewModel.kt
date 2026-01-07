@@ -30,46 +30,14 @@ class MainViewModel : ViewModel() {
     private val _sugerenciasState = MutableStateFlow<UIState<List<String>>>(UIState.Empty)
     val sugerenciasState: StateFlow<UIState<List<String>>> = _sugerenciasState
 
-    private var currentKeyIndex = 0
-
-    val misApiKeys = listOf(
-        "AIzaSyBFaVSE-n5rgORlvwn8iMTSKPgCKB9c1R0",
-        "AIzaSyBKOWMJQtywrNVD_K9EI2ekwSiyfGhobsc",
-//        "AIzaSyB6R_oAodzW9alx5RdBLW9_k0P1d-wLol4",
-//        "AIzaSyCUtBnOherlOYNJHQInGBfUuGyCRRN13Uw",
-//        "AIzaSyBLM5iG8jAG-f6fuej1lmfAFt8XBMFPQkc",
-//        "AIzaSyAXnIsPkra2u8k9E6gShl_FuultF5ym0bU",
-//        "AIzaSyDVOwBtzdHKBKOhxHLGcvWWwEFJGFfl0IQ"
-        // tengori75
-        "AIzaSyD6l00QsdFZe3IWHyUqqIXK_3e7VaGdvY0",
-        "AIzaSyB1pS5LqYdSU-myoS4Z4jCtW9MUiw-9moQ",
-        "AIzaSyAqKAWqScLP7O6fW0KBibI92WmH7azLaBo",
-        "AIzaSyC3KKvmkc_fTSAPtznNz0LStIlfBnsAs3o",
-        "AIzaSyBztdjnhpmwmRGVFjoEcPPW4XxBwxUo_Sk",
-        "AIzaSyDxwtiH-WRd-MzcIhX7PimU5VUHqtIdQCk",
-        // tengori333
-        "AIzaSyBd1DZ_0XCYAlYBjZp9AxLsTqp3H810lMM",
-        "AIzaSyAyRlPClR4ytY5sRsOX9IYfhMZxDOuu29I",
-        "AIzaSyAyRlPClR4ytY5sRsOX9IYfhMZxDOuu29I",
-        "AIzaSyDdyUgMtBTSyJsgu09B8tP4t4zB1qwjzgE",
-        "AIzaSyBoUG36uimfaZscysjION_8wvH14SEEkcY",
-        // tengori44
-        "AIzaSyDTsGUyQWkKn6fBhvYMZnmo1WV_dzCs4Kk",
-        "AIzaSyA4EX3JxNSJM54dpV3UMhhBTI5VcLw51XU",
-        "AIzaSyBp81HsL3y29hBOTKaM34OV-c3Tks5mwP8",
-        "AIzaSyD4SGLDNHGHUkXdO-lEqeL7aCnm2kgOu80",
-        "AIzaSyAMHNqf20FB6TlOkCUYis0__voYjqDbwYc",
-        "AIzaSyCF5FZ3kXVEbLIvxvcktEmQM43C-LHggGE",
-        "AIzaSyBOVt9NCJqQDYa5OmIWlcStOt89oLsGcMg",
-        // tengori222
-        "AIzaSyDOtA5imVYgLKxHwORlF101_xZ-B7BMiBU"
-    )
+    private val _videoUrlState = MutableStateFlow<UIState<String>>(UIState.Empty)
+    val videoUrlState: StateFlow<UIState<String>> = _videoUrlState
 
     fun getVideos(busquedaUsuario: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _uiStateData.value = UIState.Loading
             try {
-                // 1. Usamos NewPipe para buscar
+
                 val serviceId = ServiceList.YouTube.serviceId
                 val searchExtractor = NewPipe.getService(serviceId)
                     .getSearchExtractor(
@@ -81,8 +49,6 @@ class MainViewModel : ViewModel() {
                 searchExtractor.fetchPage()
                 val newPipeItems = searchExtractor.initialPage.items
 
-                // 2. Convertimos los resultados de NewPipe a tu clase 'Item'
-                // para que el Adapter no se rompa.
                 val listaConvertida = newPipeItems.mapNotNull { item ->
                     if (item is StreamInfoItem) {
                         mapNewPipeItemToAppItem(item)
@@ -91,9 +57,6 @@ class MainViewModel : ViewModel() {
                     }
                 }
 
-                // 3. Empaquetamos en tu VideoResponse y enviamos
-                // Asumo que VideoResponse tiene un constructor que acepta la lista
-                // Si VideoResponse es de la librería de Google, tendrás que crear una clase wrapper propia.
                 val response = VideoResponse(listaConvertida)
                 _uiStateData.value = UIState.Success(response)
 
@@ -103,29 +66,6 @@ class MainViewModel : ViewModel() {
             }
         }
     }
-
-
-//    fun getVideos(busquedaUsuario: String) {
-//        viewModelScope.launch {
-//            _uiStateData.value = UIState.Loading
-//            try {
-//                val currentKey = misApiKeys[currentKeyIndex]
-//                Log.i("MainActivity", "Usando Key [$currentKeyIndex]: $currentKey")
-//                currentKeyIndex = (currentKeyIndex + 1) % misApiKeys.size
-//                val call = retrofit.getHost().getVideos(busquedaUsuario, 50, currentKey)
-//                if (call.isSuccessful) {
-//                    call.body()?.let { it ->
-//                        _uiStateData.value = UIState.Success(it)
-//                    }
-//                } else {
-//                    _uiStateData.value =
-//                        UIState.Error("Error call: ${call.code()} - ${call.message()} - ${call.errorBody()} - ${call.message()}")
-//                }
-//            } catch (e: Exception) {
-//                _uiStateData.value = UIState.Error(e.localizedMessage ?: "Unknown error")
-//            }
-//        }
-//    }
 
     fun getSugerencias(query: String) {
         viewModelScope.launch {
@@ -151,19 +91,83 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun getStreamUrl(videoId: String) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            _videoUrlState.value = UIState.Loading
+//            try {
+//                // 1. Inicializar extractor
+//                val streamExtractor = NewPipe.getService(ServiceList.YouTube.serviceId)
+//                    .getStreamExtractor("https://www.youtube.com/watch?v=$videoId")
+//
+//                // 2. Extraer datos
+//                streamExtractor.fetchPage()
+//
+//                // 3. Obtener lista (solo para que corra el proceso interno)
+//                val streams = streamExtractor.videoStreams
+//
+//                // 4. USAR EL PUENTE MÁGICO
+//                // Leemos la variable estática de nuestra clase
+//                val magicUrl = org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.lastWorkingUrl
+//
+//                if (magicUrl != null) {
+//                    // Si el puente tiene algo, LO USAMOS
+//                    Log.i("MainActivity", "¡URL recuperada del puente mágico!")
+//                    _videoUrlState.value = UIState.Success(magicUrl) as UIState<String>
+//                } else if (streams.isNotEmpty()) {
+//                    // Si no, intentamos la forma normal
+//                    val stream = streams.lastOrNull {
+//                        it.resolution.contains("360") || it.resolution.contains("720")
+//                    } ?: streams.last()
+//
+//                    // Chequeo extra de seguridad
+//                    if (stream.url != null) {
+//                        _videoUrlState.value = UIState.Success(stream.url) as UIState<String>
+//                    } else {
+//                        _videoUrlState.value = UIState.Error("Stream encontrado pero URL es null")
+//                    }
+//                } else {
+//                    _videoUrlState.value = UIState.Error("No se encontró stream válido")
+//                }
+//
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                _videoUrlState.value = UIState.Error(e.message ?: "Error desconocido")
+//            }
+//        }
+        viewModelScope.launch(Dispatchers.IO) {
+            _videoUrlState.value = UIState.Loading
+            try {
+                val streamExtractor = NewPipe.getService(ServiceList.YouTube.serviceId)
+                    .getStreamExtractor("https://www.youtube.com/watch?v=$videoId")
+
+                streamExtractor.fetchPage()
+
+                val stream = streamExtractor.videoStreams.lastOrNull {
+                    it.resolution.contains("720") || it.resolution.contains("360")
+                } ?: streamExtractor.videoStreams.lastOrNull()
+
+                if (stream != null) {
+                    _videoUrlState.value = UIState.Success(stream.url) as UIState<String>
+                } else {
+                    _videoUrlState.value = UIState.Error("No se encontró stream válido")
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _videoUrlState.value = UIState.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
     private fun mapNewPipeItemToAppItem(streamItem: StreamInfoItem): Item {
-        // Extraemos el ID limpio (NewPipe da la URL completa)
         val videoIdClean = streamItem.url.replace("https://www.youtube.com/watch?v=", "")
 
-        // Construimos tu objeto Id
         val idObj = Id(videoId = videoIdClean)
 
-        // Construimos el objeto Thumbnails (ajusta según tu clase)
         val thumbUrl = streamItem.thumbnails.lastOrNull()?.url ?: ""
         val highThumb = Thumbnail(url = thumbUrl)
         val thumbnailsObj = Thumbnails(high = highThumb)
 
-        // Construimos el Snippet
         val snippetObj = Snippet(
             title = streamItem.name,
             thumbnails = thumbnailsObj,
@@ -171,7 +175,6 @@ class MainViewModel : ViewModel() {
             description = streamItem.shortDescription ?: ""
         )
 
-        // Retornamos tu Item completo
         return Item(id = idObj, snippet = snippetObj)
     }
 

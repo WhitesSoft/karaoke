@@ -9,6 +9,7 @@ Fragmento de código
 .gradle/
 build/
 /app/build/
+/app/release/
 *.iml
 
 # --- Configuración Local (IMPORTANTE) ---
@@ -16,6 +17,7 @@ build/
 local.properties
 
 # --- Archivos del IDE (IntelliJ / Android Studio) ---
+.idea/
 .idea/workspace.xml
 .idea/libraries
 .idea/caches
