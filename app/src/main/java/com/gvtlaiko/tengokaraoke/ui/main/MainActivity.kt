@@ -119,16 +119,10 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-//        NewPipe.init(
-//            DownloaderImpl.getInstance(),
-//            Localization("US", "es"),
-//            ContentCountry("US")
-//        )
-        // Inicializar NewPipe globalmente
         NewPipe.init(
-            DownloaderImpl.getInstance(), // Tu downloader
-            Localization.fromLocale(Locale.getDefault()), // ✅ CORRECCIÓN: Usar fromLocale
-            ContentCountry("US") // Forzar región para evitar bloqueos locales
+            DownloaderImpl.getInstance(),
+            Localization.fromLocale(Locale.getDefault()),
+            ContentCountry("US")
         )
 
         val sharedPref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -284,7 +278,7 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun playExoPlayer(url: String) {
-try {
+        try {
             Log.i(TAG, "Iniciando ExoPlayer Oficial con URL: $url")
 
             // Liberamos el player anterior si existe
@@ -304,7 +298,8 @@ try {
             }
 
             // configuración de Red (User Agent)
-            val userAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            val userAgent =
+                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             val dataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(userAgent)
                 .setAllowCrossProtocolRedirects(true)
@@ -315,7 +310,7 @@ try {
             exoPlayer = ExoPlayer.Builder(this, renderersFactory)
                 .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
                 .build()
-            
+
             // Agregamos el listener al NUEVO player creado
             exoPlayer?.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -332,12 +327,16 @@ try {
 
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e(TAG, "Error en ExoPlayer: ${error.message}")
-                    Toast.makeText(this@MainActivity, "Error: saltando al siguiente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error: saltando al siguiente",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     // Si falla, intentamos reproducir el siguiente para no trabar la app
                     iniciarReproduccionEnCola()
                 }
             })
-          
+
             // Restauramos velocidad y tono si ya estaban cambiados
             updatePitchAndSpeed()
 
