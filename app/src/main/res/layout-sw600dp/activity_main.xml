@@ -65,7 +65,7 @@
                     android:inputType="textAutoComplete"
                     android:nextFocusRight="@id/ivSearch"
                     android:nextFocusDown="@id/rv"
-                  android:paddingStart="24dp"
+                    android:paddingStart="24dp"
                     android:paddingTop="16dp"
                     android:paddingEnd="24dp"
                     android:paddingBottom="16dp"

@@ -37,7 +37,6 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiStateData.value = UIState.Loading
             try {
-
                 val serviceId = ServiceList.YouTube.serviceId
                 val searchExtractor = NewPipe.getService(serviceId)
                     .getSearchExtractor(
@@ -46,10 +45,32 @@ class MainViewModel : ViewModel() {
                         null
                     )
 
-                searchExtractor.fetchPage()
-                val newPipeItems = searchExtractor.initialPage.items
+                searchExtractor.fetchPage() // obteenmos la primera pagina
+                var currentPage = searchExtractor.initialPage
 
-                val listaConvertida = newPipeItems.mapNotNull { item ->
+                // lista con los videos de la primera pagina
+                val allNewPipeItems = currentPage.items.toMutableList()
+
+                var paginasAdicionales = 3 // pagina a pedir
+
+                while (paginasAdicionales > 0 && currentPage.hasNextPage()) {
+                    try {
+                        // peidmos la siguiente pagina
+                        val nextPage = searchExtractor.getPage(currentPage.nextPage)
+
+                        allNewPipeItems.addAll(nextPage.items)
+
+                        currentPage = nextPage
+                        paginasAdicionales--
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        break
+                    }
+                }
+
+                // pasamos todos los videos
+                val listaConvertida = allNewPipeItems.mapNotNull { item ->
                     if (item is StreamInfoItem) {
                         mapNewPipeItemToAppItem(item)
                     } else {
@@ -70,25 +91,22 @@ class MainViewModel : ViewModel() {
     fun getSugerencias(query: String) {
         viewModelScope.launch {
             try {
-                // Llamamos a la nueva API
+
                 val responseBody = retrofit.getHost().getAutocomplete(query = query)
                 val jsonString = responseBody.string()
 
-                // Parseo manual del JSON (es un array simple)
                 val jsonArray = org.json.JSONArray(jsonString)
-                val suggestionsArray = jsonArray.getJSONArray(1) // El índice 1 tiene la lista
+                val suggestionsArray = jsonArray.getJSONArray(1)
 
                 val cleanSuggestions = mutableListOf<String>()
                 for (i in 0 until suggestionsArray.length()) {
                     cleanSuggestions.add(suggestionsArray.getString(i))
                 }
 
-                // Enviamos la lista limpia
                 _sugerenciasState.value = UIState.Success(cleanSuggestions)
 
             } catch (e: Exception) {
                 Log.e("ViewModel", "Error sugerencias: ${e.message}")
-                // Si falla, simplemente no mostramos nada
                 _sugerenciasState.value = UIState.Empty
             }
         }
