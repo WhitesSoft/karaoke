@@ -207,8 +207,6 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupRecycler()
         setupRecyclerVideosEnCola()
-
-        setupExoPlayer()
         setupPlayerControles()
         observarListaVideos()
         observarSugerencias()
@@ -253,52 +251,6 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    @OptIn(UnstableApi::class)
-    private fun setupExoPlayer() {
-        // Configuramos el RenderersFactory para permitir el procesador de audio Sonic (Pitch)
-        val renderersFactory = object : DefaultRenderersFactory(this) {
-            override fun buildAudioSink(
-                context: Context,
-                enableFloatOutput: Boolean,
-                enableAudioTrackPlaybackParams: Boolean
-            ): AudioSink? {
-                return DefaultAudioSink.Builder(this@MainActivity)
-                    .setAudioProcessors(arrayOf(SonicAudioProcessor()))
-                    .build()
-            }
-        }
-
-//        exoPlayer = ExoPlayer.Builder(this, renderersFactory).build()
-        exoPlayer = null
-
-//        binding.playerView?.player = exoPlayer
-        binding.playerView?.player = null
-
-        exoPlayer?.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) {
-                    if (isLoopingEnabled) {
-                        exoPlayer?.seekTo(0)
-                        exoPlayer?.play()
-                    } else {
-                        iniciarReproduccionEnCola()
-                    }
-                }
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                Log.e(TAG, "ExoPlayer CRITICAL Error: ${error.errorCodeName}", error)
-
-                Toast.makeText(
-                    this@MainActivity,
-                    "Error reproduciendo: ${error.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                iniciarReproduccionEnCola()
-            }
-        })
-    }
-
     private fun observarStreamUrl() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -332,46 +284,79 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun playExoPlayer(url: String) {
-        try {
+try {
             Log.i(TAG, "Iniciando ExoPlayer Oficial con URL: $url")
 
+            // Liberamos el player anterior si existe
             exoPlayer?.release()
 
-            // ... (Configuración del UserAgent y DataSource igual que antes) ...
-            val userAgent =
-                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            // configuración de Sonic (Para que funcione el cambio de Tono/Velocidad)
+            val renderersFactory = object : DefaultRenderersFactory(this) {
+                override fun buildAudioSink(
+                    context: Context,
+                    enableFloatOutput: Boolean,
+                    enableAudioTrackPlaybackParams: Boolean
+                ): AudioSink? {
+                    return DefaultAudioSink.Builder(this@MainActivity)
+                        .setAudioProcessors(arrayOf(SonicAudioProcessor()))
+                        .build()
+                }
+            }
+
+            // configuración de Red (User Agent)
+            val userAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             val dataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(userAgent)
                 .setAllowCrossProtocolRedirects(true)
 
             val mediaItem = MediaItem.fromUri(url)
 
-            exoPlayer = ExoPlayer.Builder(this)
+            // creamos el player
+            exoPlayer = ExoPlayer.Builder(this, renderersFactory)
                 .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
                 .build()
+            
+            // Agregamos el listener al NUEVO player creado
+            exoPlayer?.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        if (isLoopingEnabled) {
+                            exoPlayer?.seekTo(0)
+                            exoPlayer?.play()
+                        } else {
+                            // Cuando termina, llama al siguiente video
+                            iniciarReproduccionEnCola()
+                        }
+                    }
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e(TAG, "Error en ExoPlayer: ${error.message}")
+                    Toast.makeText(this@MainActivity, "Error: saltando al siguiente", Toast.LENGTH_SHORT).show()
+                    // Si falla, intentamos reproducir el siguiente para no trabar la app
+                    iniciarReproduccionEnCola()
+                }
+            })
+          
+            // Restauramos velocidad y tono si ya estaban cambiados
+            updatePitchAndSpeed()
 
             binding.playerView?.player = exoPlayer
             exoPlayer?.setMediaItem(mediaItem)
             exoPlayer?.prepare()
             exoPlayer?.playWhenReady = true
 
-            // --- 👇 AQUÍ ESTÁ EL ARREGLO 👇 ---
-
-            // 1. Hacemos visible la pantalla del video
+            // Manejo de visibilidad
             binding.playerView?.isVisible = true
-
-            // 2. Ocultamos la imagen del logo que lo está tapando
             binding.llContenedorVideo?.isVisible = false
 
-            // ----------------------------------
-
         } catch (e: Exception) {
-            Log.e(TAG, "Error: ${e.message}")
-            // Si hay error, volvemos a mostrar el logo
+            Log.e(TAG, "Error general: ${e.message}")
             binding.playerView?.isVisible = false
             binding.llContenedorVideo?.isVisible = true
+            // Si falla la inicialización, pasamos al siguiente
+            iniciarReproduccionEnCola()
         }
-
     }
 
     private fun setupPlayerControles() {
