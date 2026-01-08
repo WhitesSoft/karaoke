@@ -37,7 +37,6 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiStateData.value = UIState.Loading
             try {
-
                 val serviceId = ServiceList.YouTube.serviceId
                 val searchExtractor = NewPipe.getService(serviceId)
                     .getSearchExtractor(
@@ -45,11 +44,33 @@ class MainViewModel : ViewModel() {
                         listOf(YoutubeSearchQueryHandlerFactory.VIDEOS),
                         null
                     )
+                
+                searchExtractor.fetchPage() // obteenmos la primera pagina
+                var currentPage = searchExtractor.initialPage
 
-                searchExtractor.fetchPage()
-                val newPipeItems = searchExtractor.initialPage.items
+                // lista con los videos de la primera pagina
+                val allNewPipeItems = currentPage.items.toMutableList()
+                
+                var paginasAdicionales = 3 // pagina a pedir
 
-                val listaConvertida = newPipeItems.mapNotNull { item ->
+                while (paginasAdicionales > 0 && currentPage.hasNextPage()) {
+                    try {
+                        // peidmos la siguiente pagina
+                        val nextPage = searchExtractor.getPage(currentPage.nextPage)
+                        
+                        allNewPipeItems.addAll(nextPage.items)
+                        
+                        currentPage = nextPage
+                        paginasAdicionales--
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        break
+                    }
+                }
+
+                // pasamos todos los videos
+                val listaConvertida = allNewPipeItems.mapNotNull { item ->
                     if (item is StreamInfoItem) {
                         mapNewPipeItemToAppItem(item)
                     } else {
