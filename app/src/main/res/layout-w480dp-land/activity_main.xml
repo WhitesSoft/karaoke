@@ -116,11 +116,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:autoPlay="false"
                     app:resize_mode="fit"
                     app:show_buffering="when_playing"
-                    app:use_controller="false" />
-
+                    app:show_timeout="3000"
+                    app:use_controller="true" />
 
                 <ImageView
                     android:id="@+id/llContenedorVideo"

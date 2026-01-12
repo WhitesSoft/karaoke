@@ -116,13 +116,14 @@
                     android:id="@+id/playerView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="gone"
                     android:layout_gravity="center"
+                    android:visibility="gone"
                     app:autoPlay="false"
                     app:resize_mode="fit"
-                    app:surface_type="surface_view"
                     app:show_buffering="when_playing"
-                    app:use_controller="false" />
+                    app:show_timeout="3000"
+                    app:surface_type="surface_view"
+                    app:use_controller="true" />
 
                 <ImageView
                     android:id="@+id/llContenedorVideo"
