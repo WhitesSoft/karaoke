@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity() {
                 if (currentSpeed < 2.0f)
                     currentSpeed += 0.20f
                 updatePitchAndSpeed()
-               binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
+               actualizarIndicador(binding.tvFastVideo, currentSpeed)
             }
         }
 
@@ -490,7 +490,7 @@ class MainActivity : AppCompatActivity() {
                 if (currentSpeed > 0.5f)
                     currentSpeed -= 0.20f
                 updatePitchAndSpeed()
-                binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
+                actualizarIndicador(binding.tvFastVideo, currentSpeed)
             }
         }
 
@@ -506,6 +506,27 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun actualizarIndicador(textView: TextView?, valor: Float) {
+        if (textView == null) return
+
+        when {
+            valor > 1.0f -> {
+                textView.text = "↑"
+                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
+            }
+
+            valor < 1.0f -> {
+                textView.text = "↓"
+                textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+            }
+
+            else -> {
+                textView.text = "·"
+                textView.setTextColor(Color.WHITE) // Color normal
+            }
+        }
+    }
+
      private fun obtenerSimbolo(valor: Float): String {
         return when {
             valor > 1.0f -> "↑"
@@ -516,7 +537,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetPitch() {
         currentPitch = 1.0f
-        binding.tvTonalidadVideo?.text = "·"
+        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
         updatePitchAndSpeed()
     }
 
@@ -528,7 +549,7 @@ class MainActivity : AppCompatActivity() {
         updatePitchAndSpeed()
 
         Log.i(TAG, "Nuevo Tono: $currentPitch")
-        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
+        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
     }
 
     private fun updatePitchAndSpeed() {
@@ -719,6 +740,8 @@ class MainActivity : AppCompatActivity() {
                             listaVideos.clear()
                             listaVideos.addAll(state.data.items)
                             videoAdapter.notifyDataSetChanged()
+
+                            binding.rv.scrollToPosition(0)
                         }
                     }
                 }
