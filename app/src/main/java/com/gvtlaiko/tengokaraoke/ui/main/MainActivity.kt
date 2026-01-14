@@ -20,6 +20,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -67,6 +68,7 @@ import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.localization.ContentCountry
 import org.schabi.newpipe.extractor.localization.Localization
 import java.util.Locale
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -361,11 +363,11 @@ class MainActivity : AppCompatActivity() {
     private fun setupPlayerControles() {
 
         binding.ivBajarTonalidad?.setOnClickListener {
-            changePitch(-0.05f)
+            changePitch(-0.10f)
         }
 
         binding.ivSubirTonalidad?.setOnClickListener {
-            changePitch(0.05f)
+            changePitch(0.10f)
         }
 
         binding.ivBajarTonalidad?.setOnLongClickListener {
@@ -390,16 +392,16 @@ class MainActivity : AppCompatActivity() {
 
         binding.ivFastVideo?.setOnClickListener {
             if (currentSpeed < 2.0f)
-                currentSpeed += 0.25f
+                currentSpeed += 0.20f
             updatePitchAndSpeed()
-            binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
+            actualizarIndicador(binding.tvFastVideo, currentSpeed)
         }
 
         binding.ivLowVideo?.setOnClickListener {
             if (currentSpeed > 0.5f)
-                currentSpeed -= 0.25f
+                currentSpeed -= 0.20f
             updatePitchAndSpeed()
-            binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
+            actualizarIndicador(binding.tvFastVideo, currentSpeed)
         }
 
         binding.ivFullscreen?.setOnClickListener {
@@ -408,6 +410,27 @@ class MainActivity : AppCompatActivity() {
 
         binding.ivSearch?.setOnClickListener { realizarBusqueda() }
 
+    }
+
+    private fun actualizarIndicador(textView: TextView?, valor: Float) {
+        if (textView == null) return
+
+        when {
+            valor > 1.0f -> {
+                textView.text = "↑"
+                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
+            }
+
+            valor < 1.0f -> {
+                textView.text = "↓"
+                textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+            }
+
+            else -> {
+                textView.text = "·"
+                textView.setTextColor(Color.WHITE) // Color normal
+            }
+        }
     }
 
     private fun obtenerSimbolo(valor: Float): String {
@@ -420,18 +443,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetPitch() {
         currentPitch = 1.0f
-        binding.tvTonalidadVideo?.text = "·"
+        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
         updatePitchAndSpeed()
     }
 
     private fun changePitch(delta: Float) {
         currentPitch += delta
+        currentPitch = (currentPitch * 10).roundToInt() / 10.0f
         // limites (0.5 a 2.0) grave - ardilla
         currentPitch = currentPitch.coerceIn(0.5f, 2.0f)
         updatePitchAndSpeed()
 
         Log.i(TAG, "Nuevo Tono: $currentPitch")
-        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
+//        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
+        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
     }
 
     private fun updatePitchAndSpeed() {
@@ -529,7 +554,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun iniciarReproduccionEnCola() {
         if (listaVideosEnCola.isEmpty()) {
-             if (isPlayerFullscreen) {
+            if (isPlayerFullscreen) {
                 exitCustomFullscreen()
             }
             binding.llContenedorVideo?.isVisible = true
@@ -616,6 +641,8 @@ class MainActivity : AppCompatActivity() {
                             listaVideos.clear()
                             listaVideos.addAll(state.data.items)
                             videoAdapter.notifyDataSetChanged()
+
+                            binding.rv.scrollToPosition(0)
                         }
                     }
                 }

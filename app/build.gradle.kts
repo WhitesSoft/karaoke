@@ -13,8 +13,8 @@ android {
         applicationId = "com.gvtlaiko.tengokaraoke"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "2.2.0"
+        versionCode = 18
+        versionName = "2.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
