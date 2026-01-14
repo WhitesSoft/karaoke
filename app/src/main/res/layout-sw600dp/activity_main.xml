@@ -190,7 +190,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_down"
+                        android:src="@drawable/ic_hombre"
                         app:tint="@color/white" />
 
                     <TextView
@@ -210,7 +210,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_up"
+                        android:src="@drawable/ic_mujer"
                         app:tint="@color/white" />
 
                     <ImageView
@@ -242,7 +242,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_low"
+                        android:src="@drawable/ic_menos"
                         app:tint="@color/white" />
 
                     <TextView
@@ -261,7 +261,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_fast_forward"
+                        android:src="@drawable/ic_mas"
                         app:tint="@color/white" />
 
                     <ImageView
