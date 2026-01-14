@@ -522,6 +522,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun iniciarReproduccionEnCola() {
         if (listaVideosEnCola.isEmpty()) {
+             if (isPlayerFullscreen) {
+                exitCustomFullscreen()
+            }
             binding.llContenedorVideo?.isVisible = true
             binding.playerView?.isVisible = false
             return
