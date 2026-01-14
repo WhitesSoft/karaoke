@@ -477,7 +477,7 @@ class MainActivity : AppCompatActivity() {
             isClickable = true
             setOnClickListener {
                 if (currentSpeed < 2.0f)
-                    currentSpeed += 0.25f
+                    currentSpeed += 0.20f
                 updatePitchAndSpeed()
                binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
             }
@@ -488,7 +488,7 @@ class MainActivity : AppCompatActivity() {
             isClickable = true
             setOnClickListener {
                 if (currentSpeed > 0.5f)
-                    currentSpeed -= 0.25f
+                    currentSpeed -= 0.20f
                 updatePitchAndSpeed()
                 binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
             }
@@ -522,6 +522,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun changePitch(delta: Float) {
         currentPitch += delta
+        currentPitch = (currentPitch * 10).roundToInt() / 10.0f
         // limites (0.5 a 2.0) grave - ardilla
         currentPitch = currentPitch.coerceIn(0.5f, 2.0f)
         updatePitchAndSpeed()
