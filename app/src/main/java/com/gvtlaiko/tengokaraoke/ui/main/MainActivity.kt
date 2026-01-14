@@ -477,7 +477,7 @@ class MainActivity : AppCompatActivity() {
                 if (currentSpeed < 2.0f)
                     currentSpeed += 0.25f
                 updatePitchAndSpeed()
-                binding.tvFastVideo?.text = "${currentSpeed}x"
+               binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
             }
         }
 
@@ -488,7 +488,7 @@ class MainActivity : AppCompatActivity() {
                 if (currentSpeed > 0.5f)
                     currentSpeed -= 0.25f
                 updatePitchAndSpeed()
-                binding.tvFastVideo?.text = "${currentSpeed}x"
+                binding.tvFastVideo?.text = obtenerSimbolo(currentSpeed)
             }
         }
 
@@ -504,11 +504,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+     private fun obtenerSimbolo(valor: Float): String {
+        return when {
+            valor > 1.0f -> "↑"
+            valor < 1.0f -> "↓"
+            else -> "·"
+        }
+    }
+
     private fun resetPitch() {
         currentPitch = 1.0f
-        binding.tvTonalidadVideo?.text = String.format("%.2f", currentPitch)
+        binding.tvTonalidadVideo?.text = "·"
         updatePitchAndSpeed()
-        Toast.makeText(this, "Tono Restaurado (Normal)", Toast.LENGTH_SHORT).show()
     }
 
     private fun changePitch(delta: Float) {
@@ -518,7 +525,7 @@ class MainActivity : AppCompatActivity() {
         updatePitchAndSpeed()
 
         Log.i(TAG, "Nuevo Tono: $currentPitch")
-        binding.tvTonalidadVideo?.text = String.format("%.2f", currentPitch)
+        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
     }
 
     private fun updatePitchAndSpeed() {
