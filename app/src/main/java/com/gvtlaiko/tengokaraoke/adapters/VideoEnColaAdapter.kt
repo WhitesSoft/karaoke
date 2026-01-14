@@ -52,8 +52,8 @@ class VideoEnColaAdapter(
         }
 
         fun render(item: Item) {
-            itemView.isFocusable = false
-            itemView.isFocusableInTouchMode = false
+            itemView.isFocusable = true
+            itemView.isFocusableInTouchMode = true
             itemView.isClickable = false
 
             with(binding) {
@@ -70,13 +70,11 @@ class VideoEnColaAdapter(
 
                 containerInfoPlay.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
                     if (hasFocus) {
-                        v.animate().scaleX(1.08f).scaleY(1.08f).setDuration(150).start()
+                        v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(100).start()
                         v.elevation = 8f
-                        v.background = null
                     } else {
-                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
                         v.elevation = 0f
-                        v.background = null
                     }
                 }
 
