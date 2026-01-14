@@ -163,7 +163,6 @@
                         android:layout_height="wrap_content"
                         android:text="KARAOKE"
                         android:textColor="@color/white"
-
                         android:textStyle="bold" />
 
                     <ImageView
@@ -171,19 +170,18 @@
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:layout_marginEnd="4dp"
-                        android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_hombre"
-                        app:tint="@color/white" />
+                        app:tint="#2196F3" />
 
                     <TextView
                         android:id="@+id/tvTonalidadVideo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1.00"
+                        android:text="·"
                         android:textColor="@color/white"
-                        android:textSize="16sp"
+                        android:textSize="30sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -191,11 +189,10 @@
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:layout_marginEnd="4dp"
-                        android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_mujer"
-                        app:tint="@color/white" />
+                        app:tint="#E91E63" />
 
                     <ImageView
                         android:id="@+id/ivBucleVideo"
@@ -233,9 +230,9 @@
                         android:id="@+id/tvFastVideo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1x"
+                        android:text="·"
                         android:textColor="@color/white"
-                        android:textSize="16sp"
+                        android:textSize="30sp"
                         android:textStyle="bold" />
 
                     <ImageView
