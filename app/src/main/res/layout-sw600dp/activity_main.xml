@@ -308,7 +308,7 @@
                         android:nextFocusUp="@id/frame_container"
                         android:nextFocusDown="@id/rvEnCola"
                         android:padding="8dp"
-                        android:src="@drawable/ic_fast_forward"
+                        android:src="@drawable/ic_mas"
                         app:tint="@color/white" />
 
                     <ImageView

@@ -149,6 +149,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="8dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 android:divider="@drawable/spacer"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -202,7 +204,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_down"
+                        android:src="@drawable/ic_hombre"
                         app:tint="@color/white" />
 
                     <TextView
@@ -223,7 +225,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_up"
+                        android:src="@drawable/ic_mujer"
                         app:tint="@color/white" />
 
                     <ImageView
@@ -243,6 +245,8 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:divider="@drawable/spacer"
                     android:gravity="end|center"
                     android:orientation="horizontal"
@@ -252,10 +256,11 @@
                         android:id="@+id/ivLowVideo"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+
+                        android:background="@drawable/bg_focus_selector"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_low"
+                        android:src="@drawable/ic_menos"
                         app:tint="@color/white" />
 
                     <TextView
@@ -274,7 +279,7 @@
                         android:background="@drawable/selector_image"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
-                        android:src="@drawable/ic_fast_forward"
+                        android:src="@drawable/ic_mas"
                         app:tint="@color/white" />
 
                     <ImageView

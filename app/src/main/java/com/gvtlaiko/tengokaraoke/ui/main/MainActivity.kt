@@ -356,7 +356,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             // configuración de Red (User Agent)
-            val userAgent = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            val userAgent =
+                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
             val dataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(userAgent)
                 .setAllowCrossProtocolRedirects(true)
@@ -384,7 +385,11 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e(TAG, "Error en ExoPlayer: ${error.message}")
-                    Toast.makeText(this@MainActivity, "Error: saltando al siguiente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error: saltando al siguiente",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     // Si falla, intentamos reproducir el siguiente para no trabar la app
                     iniciarReproduccionEnCola()
                 }
@@ -612,6 +617,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun iniciarReproduccionEnCola() {
         if (listaVideosEnCola.isEmpty()) {
+            if (isPlayerFullscreen) {
+                exitCustomFullscreen()
+            }
             binding.llContenedorVideo?.isVisible = true
             binding.playerView?.isVisible = false
             return
