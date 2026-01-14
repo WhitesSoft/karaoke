@@ -21,6 +21,7 @@ local.properties
 .idea/kotlinc.xml
 .idea/studiobot.xml
 .idea/deploymentTargetSelector.xml
+.idea/
 # A veces es mejor ignorar la carpeta .idea completa, pero
 # mantener los diccionarios o estilos de código si el equipo los comparte.
 # Si prefieres ignorar todo lo de Android Studio, descomenta la siguiente línea:

@@ -225,7 +225,7 @@
                         android:layout_marginHorizontal="10dp"
                         android:text="·"
                         android:textColor="@color/white"
-                        android:textSize="20sp"
+                        android:textSize="40sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -292,7 +292,7 @@
                         android:layout_height="wrap_content"
                         android:text="·"
                         android:textColor="@color/white"
-                        android:textSize="20sp"
+                        android:textSize="40sp"
                         android:textStyle="bold" />
 
                     <ImageView
