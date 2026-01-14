@@ -206,7 +206,7 @@
                         android:id="@+id/ivBajarTonalidad"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:clickable="true"
                         android:contentDescription="@string/app_name"
                         android:focusable="true"
@@ -215,8 +215,8 @@
                         android:nextFocusUp="@id/frame_container"
                         android:nextFocusDown="@id/rvEnCola"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_down"
-                        app:tint="@color/white" />
+                        android:src="@drawable/ic_hombre"
+                        app:tint="#2196F3" />
 
                     <TextView
                         android:id="@+id/tvTonalidadVideo"
@@ -232,7 +232,7 @@
                         android:id="@+id/ivSubirTonalidad"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:checked="true"
                         android:clickable="true"
                         android:contentDescription="@string/app_name"
@@ -242,15 +242,15 @@
                         android:nextFocusUp="@id/frame_container"
                         android:nextFocusDown="@id/rvEnCola"
                         android:padding="8dp"
-                        android:src="@drawable/ic_volume_up"
-                        app:tint="@color/white" />
+                        android:src="@drawable/ic_mujer"
+                        app:tint="#E91E63" />
 
                     <ImageView
                         android:id="@+id/ivBucleVideo"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:layout_marginEnd="4dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:contentDescription="@string/app_name"
                         android:padding="8dp"
                         android:src="@drawable/ic_repeat"
@@ -273,7 +273,7 @@
                         android:id="@+id/ivLowVideo"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:checked="true"
                         android:clickable="true"
                         android:contentDescription="@string/app_name"
@@ -283,7 +283,7 @@
                         android:nextFocusUp="@id/frame_container"
                         android:nextFocusDown="@id/rvEnCola"
                         android:padding="8dp"
-                        android:src="@drawable/ic_low"
+                        android:src="@drawable/ic_menos"
                         app:tint="@color/white" />
 
                     <TextView
@@ -299,7 +299,7 @@
                         android:id="@+id/ivFastVideo"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:clickable="true"
                         android:contentDescription="@string/app_name"
                         android:focusable="true"
@@ -315,7 +315,7 @@
                         android:id="@+id/ivReplay"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:clickable="true"
                         android:contentDescription="@string/app_name"
                         android:focusable="true"
@@ -331,7 +331,7 @@
                         android:id="@+id/ivFullscreen"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
-                        android:background="@drawable/selector_image"
+                        android:background="@drawable/bg_focus_selector"
                         android:clickable="true"
                         android:contentDescription="Pantalla Completa"
                         android:focusable="true"

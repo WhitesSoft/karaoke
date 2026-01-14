@@ -103,7 +103,6 @@ class MainActivity : AppCompatActivity() {
 
     var searchJob: Job? = null
 
-
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -220,7 +219,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startAppComponents() {
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+
 
         setupUI()
         setupRecycler()
@@ -230,6 +230,8 @@ class MainActivity : AppCompatActivity() {
         observarSugerencias()
         observarStreamUrl() // newpipe
         setupTVNavigation()
+
+        Log.i(TAG, "entra hasta aqui")
 
         mainViewModel.getVideos("Musica en tendencia -shorts -tiktok")
 
@@ -699,7 +701,7 @@ class MainActivity : AppCompatActivity() {
                             Log.i("MainActivity", "empty")
                         }
 
-                        is UIState.Error -> Log.i("MainActivity", state.error)
+                        is UIState.Error -> Log.i("MainActivity", "${state.error} error")
                         UIState.Loading -> {
                             Log.i("MainActivity", "Loading")
                             binding.lvContenedor?.isVisible = false
@@ -818,32 +820,6 @@ class MainActivity : AppCompatActivity() {
         listaVideosEnCola.removeAt(position)
         videoAdapterEnCola.notifyItemRemoved(position)
     }
-
-//    @SuppressLint("GestureBackNavigation")
-//    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-//        if (keyCode == KeyEvent.KEYCODE_BACK) {
-//            val currentTime = System.currentTimeMillis()
-//
-//            // 1. ANTI-REBOTE POR TIEMPO (Debounce)
-//            // Si han pasado menos de 300ms desde la última vez, ignoramos este evento.
-//            if (currentTime - lastBackPressTime < 300) {
-//                return true
-//            }
-//            lastBackPressTime = currentTime
-//
-//            // 2. LÓGICA DE NAVEGACIÓN
-//            if (isPlayerFullscreen) {
-//                exitCustomFullscreen()
-//            } else {
-//                showExitConfirmationDialog()
-//            }
-//
-//            // 3. IMPORTANTE: Devolver true para decir "Yo manejé esto, sistema no hagas nada"
-//            return true
-//        }
-//
-//        return super.onKeyDown(keyCode, event)
-//    }
 
     override fun onStop() {
         super.onStop()
