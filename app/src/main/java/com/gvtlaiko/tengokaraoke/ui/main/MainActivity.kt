@@ -628,6 +628,8 @@ class MainActivity : AppCompatActivity() {
         if (listaVideosEnCola.isEmpty()) {
             if (isPlayerFullscreen) {
                 exitCustomFullscreen()
+                binding.llContenedorVideo?.isVisible = true
+                binding.playerView?.isVisible = false
             }
             binding.llContenedorVideo?.isVisible = true
             binding.playerView?.isVisible = false
