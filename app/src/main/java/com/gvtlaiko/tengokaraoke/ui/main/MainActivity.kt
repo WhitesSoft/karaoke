@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowInsets
@@ -208,7 +209,7 @@ class MainActivity : AppCompatActivity() {
         observarSugerencias()
         observarStreamUrl() // newpipe
 
-        mainViewModel.getVideos("Musica en tendencia -shorts -tiktok")
+        mainViewModel.getVideos("Karaoke en tendencia -shorts -tiktok")
 
         val onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -394,14 +395,14 @@ class MainActivity : AppCompatActivity() {
             if (currentSpeed < 2.0f)
                 currentSpeed += 0.20f
             updatePitchAndSpeed()
-            actualizarIndicador(binding.tvFastVideo, currentSpeed)
+            actualizarIndicadorVelocidad(binding.tvFastVideo, currentSpeed)
         }
 
         binding.ivLowVideo?.setOnClickListener {
             if (currentSpeed > 0.5f)
                 currentSpeed -= 0.20f
             updatePitchAndSpeed()
-            actualizarIndicador(binding.tvFastVideo, currentSpeed)
+            actualizarIndicadorVelocidad(binding.tvFastVideo, currentSpeed)
         }
 
         binding.ivFullscreen?.setOnClickListener {
@@ -412,23 +413,50 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun actualizarIndicador(textView: TextView?, valor: Float) {
+    private fun actualizarIndicadorTonalidad(textView: TextView?, valor: Float) {
+        if (textView == null) return
+
+        when {
+            valor > 1.0f -> {
+                textView.text = "↑"
+                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
+            }
+
+            valor < 1.0f -> {
+                textView.text = "↓"
+                textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
+            }
+
+            else -> {
+                textView.text = "—"
+                textView.setTextColor(Color.WHITE) // Color normal
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
+            }
+        }
+    }
+
+    private fun actualizarIndicadorVelocidad(textView: TextView?, valor: Float) {
         if (textView == null) return
 
         when {
             valor > 1.0f -> {
                 textView.text = "→"
-                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
+                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")\
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
             valor < 1.0f -> {
                 textView.text = "←"
                 textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
             else -> {
-                textView.text = "·"
+                textView.text = "—"
                 textView.setTextColor(Color.WHITE) // Color normal
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
             }
         }
     }
@@ -443,7 +471,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetPitch() {
         currentPitch = 1.0f
-        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
+        actualizarIndicadorTonalidad(binding.tvTonalidadVideo, currentPitch)
         updatePitchAndSpeed()
     }
 
@@ -456,7 +484,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.i(TAG, "Nuevo Tono: $currentPitch")
 //        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
-        actualizarIndicador(binding.tvTonalidadVideo, currentPitch)
+        actualizarIndicadorTonalidad(binding.tvTonalidadVideo, currentPitch)
     }
 
     private fun updatePitchAndSpeed() {

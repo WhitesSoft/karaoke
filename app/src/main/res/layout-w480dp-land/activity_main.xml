@@ -158,13 +158,6 @@
                         app:showText="true"
                         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="KARAOKE"
-                        android:textColor="@color/white"
-                        android:textStyle="bold" />
-
                     <ImageView
                         android:id="@+id/ivBajarTonalidad"
                         android:layout_width="50dp"
@@ -177,11 +170,13 @@
 
                     <TextView
                         android:id="@+id/tvTonalidadVideo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="·"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="—"
                         android:textColor="@color/white"
-                        android:textSize="40sp"
+                        android:textSize="50sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -193,6 +188,37 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_mujer"
                         app:tint="#E91E63" />
+
+                    <ImageView
+                        android:id="@+id/ivLowVideo"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_menos"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/tvFastVideo"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="—"
+                        android:textColor="@color/white"
+                        android:textSize="50sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/ivFastVideo"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:background="@drawable/selector_image"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_mas"
+                        app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/ivBucleVideo"
@@ -215,35 +241,6 @@
                     android:gravity="end|center"
                     android:orientation="horizontal"
                     android:showDividers="middle">
-
-                    <ImageView
-                        android:id="@+id/ivLowVideo"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/selector_image"
-                        android:contentDescription="@string/app_name"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_menos"
-                        app:tint="@color/white" />
-
-                    <TextView
-                        android:id="@+id/tvFastVideo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="·"
-                        android:textColor="@color/white"
-                        android:textSize="40sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/ivFastVideo"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/selector_image"
-                        android:contentDescription="@string/app_name"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_mas"
-                        app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/ivReplay"
@@ -272,8 +269,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Lista de reproducción"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="-6dp"
+                android:layout_marginBottom="8dp"
+                android:text="KARAOKE"
                 android:textColor="@color/white"
                 android:textStyle="bold" />
 
