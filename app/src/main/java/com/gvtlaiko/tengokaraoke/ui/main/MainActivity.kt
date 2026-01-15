@@ -513,12 +513,12 @@ class MainActivity : AppCompatActivity() {
 
         when {
             valor > 1.0f -> {
-                textView.text = "↑"
+                textView.text = "→"
                 textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
             }
 
             valor < 1.0f -> {
-                textView.text = "↓"
+                textView.text = "←"
                 textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
             }
 
@@ -531,8 +531,8 @@ class MainActivity : AppCompatActivity() {
 
      private fun obtenerSimbolo(valor: Float): String {
         return when {
-            valor > 1.0f -> "↑"
-            valor < 1.0f -> "↓"
+            valor > 1.0f -> "→"
+            valor < 1.0f -> "←"
             else -> "·"
         }
     }
