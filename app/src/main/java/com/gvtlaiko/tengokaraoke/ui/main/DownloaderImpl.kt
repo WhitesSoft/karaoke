@@ -38,7 +38,6 @@ class DownloaderImpl private constructor(builder: OkHttpClient.Builder) : Downlo
             .url(url)
             .method(httpMethod, dataToSend?.toRequestBody())
 
-        // Añadir cabeceras que pide NewPipe
         headers.forEach { (key, list) ->
             list.forEach { value ->
                 requestBuilder.addHeader(key, value)
@@ -61,7 +60,7 @@ class DownloaderImpl private constructor(builder: OkHttpClient.Builder) : Downlo
         )
     }
 
-    // Método helper para convertir byte[] a RequestBody si es necesario
+    // para convertir byte[] a RequestBody
     private fun ByteArray.toRequestBody(): RequestBody {
         return RequestBody.create(null, this)
     }

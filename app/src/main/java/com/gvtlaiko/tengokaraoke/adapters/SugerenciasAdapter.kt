@@ -21,9 +21,7 @@ class SugerenciasAdapter(
         )
 
         val item = getItem(position)
-
         val tvTexto = view.findViewById<TextView>(R.id.tvSugerencia)
-
         tvTexto.text = item
 
         return view

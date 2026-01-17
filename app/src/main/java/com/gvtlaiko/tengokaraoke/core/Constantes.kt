@@ -2,7 +2,10 @@ package com.gvtlaiko.tengokaraoke.core
 
 object Constantes {
 
-    //AIzaSyBFaVSE-n5rgORlvwn8iMTSKPgCKB9c1R0
     val BASE_URL: String = "https://www.googleapis.com/youtube/v3/"
+    val PREFS_NAME = "AppConfig"
+    val KEY_IS_UNLOCKED = "is_app_unlocked"
+    val APP_USER = "tengori"
+    val APP_PASSWORD = "1004"
 
 }

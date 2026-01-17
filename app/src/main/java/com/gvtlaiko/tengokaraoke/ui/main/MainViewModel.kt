@@ -45,7 +45,7 @@ class MainViewModel : ViewModel() {
                         null
                     )
 
-                searchExtractor.fetchPage() // obteenmos la primera pagina
+                searchExtractor.fetchPage() // primera pagina
                 var currentPage = searchExtractor.initialPage
 
                 // lista con los videos de la primera pagina

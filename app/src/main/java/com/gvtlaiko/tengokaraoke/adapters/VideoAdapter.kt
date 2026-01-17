@@ -3,11 +3,8 @@ package com.gvtlaiko.tengokaraoke.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.gvtlaiko.tengokaraoke.R
-import com.gvtlaiko.tengokaraoke.core.ItemDiffCallback
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
 import com.gvtlaiko.tengokaraoke.databinding.CardItemBinding
 
@@ -37,7 +34,7 @@ class VideoAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun render(item: Item) {
-            itemView.isFocusable = true // <--- CRÍTICO PARA TV
+            itemView.isFocusable = true
             itemView.isFocusableInTouchMode = true
             with(binding) {
                 tvIdVideo.text = item.id.videoId
