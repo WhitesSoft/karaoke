@@ -51,7 +51,7 @@ class MainViewModel : ViewModel() {
                 // lista con los videos de la primera pagina
                 val allNewPipeItems = currentPage.items.toMutableList()
 
-                var paginasAdicionales = 3 // paginas a pedir
+                var paginasAdicionales = 2 // paginas a pedir
 
                 while (paginasAdicionales > 0 && currentPage.hasNextPage()) {
                     try {

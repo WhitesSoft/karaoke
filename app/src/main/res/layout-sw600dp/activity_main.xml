@@ -105,7 +105,7 @@
         </LinearLayout>
 
         <View
-            android:layout_width="24dp"
+            android:layout_width="18dp"
             android:layout_height="match_parent" />
 
         <LinearLayout
@@ -162,6 +162,7 @@
                     android:layout_weight="1"
                     android:clipChildren="false"
                     android:clipToPadding="false"
+                    android:divider="@drawable/spacer"
                     android:gravity="center_vertical|start"
                     android:orientation="horizontal"
                     android:showDividers="middle">
@@ -181,27 +182,6 @@
                         app:showText="true"
                         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="12dp"
-                        android:text="KARAOKE"
-                        android:textColor="@color/white"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <androidx.mediarouter.app.MediaRouteButton
-                        android:id="@+id/ivShare"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/selector_image"
-                        android:contentDescription="@string/app_name"
-                        android:padding="8dp"
-                        android:visibility="gone"
-                        app:mediaRouteButtonTint="@color/white"
-                        app:tint="@color/white" />
-
                     <ImageView
                         android:id="@+id/ivBajarTonalidad"
                         android:layout_width="45dp"
@@ -220,12 +200,13 @@
 
                     <TextView
                         android:id="@+id/tvTonalidadVideo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="10dp"
-                        android:text="·"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="–"
                         android:textColor="@color/white"
-                        android:textSize="40sp"
+                        android:textSize="50sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -246,30 +227,6 @@
                         app:tint="#E91E63" />
 
                     <ImageView
-                        android:id="@+id/ivBucleVideo"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_focus_selector"
-                        android:contentDescription="@string/app_name"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_repeat"
-                        android:visibility="gone"
-                        app:tint="@color/white" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
-                    android:divider="@drawable/spacer"
-                    android:gravity="end|center"
-                    android:orientation="horizontal"
-                    android:showDividers="middle">
-
-                    <ImageView
                         android:id="@+id/ivLowVideo"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
@@ -288,11 +245,13 @@
 
                     <TextView
                         android:id="@+id/tvFastVideo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="·"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="–"
                         android:textColor="@color/white"
-                        android:textSize="40sp"
+                        android:textSize="50sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -310,6 +269,29 @@
                         android:padding="8dp"
                         android:src="@drawable/ic_mas"
                         app:tint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/ivBucleVideo"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:background="@drawable/bg_focus_selector"
+                        android:contentDescription="@string/app_name"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_repeat"
+                        android:visibility="gone"
+                        app:tint="@color/white" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:divider="@drawable/spacer"
+                    android:gravity="end|center"
+                    android:orientation="horizontal"
+                    android:showDividers="middle">
 
                     <ImageView
                         android:id="@+id/ivReplay"
@@ -350,8 +332,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="8dp"
-                android:text="En cola:"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="-16dp"
+                android:layout_marginBottom="18dp"
+                android:text="KARAOKE"
                 android:textColor="@color/white"
                 android:textStyle="bold" />
 
