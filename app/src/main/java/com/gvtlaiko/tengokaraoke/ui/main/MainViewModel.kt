@@ -45,13 +45,12 @@ class MainViewModel : ViewModel() {
                         null
                     )
                 
-                searchExtractor.fetchPage() // obteenmos la primera pagina
+                searchExtractor.fetchPage() // primera pagina
                 var currentPage = searchExtractor.initialPage
 
-                // lista con los videos de la primera pagina
                 val allNewPipeItems = currentPage.items.toMutableList()
                 
-                var paginasAdicionales = 2 // pagina a pedir
+                var paginasAdicionales = 2 // paginas a pedir
 
                 while (paginasAdicionales > 0 && currentPage.hasNextPage()) {
                     try {
@@ -113,48 +112,6 @@ class MainViewModel : ViewModel() {
     }
 
     fun getStreamUrl(videoId: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            _videoUrlState.value = UIState.Loading
-//            try {
-//                // 1. Inicializar extractor
-//                val streamExtractor = NewPipe.getService(ServiceList.YouTube.serviceId)
-//                    .getStreamExtractor("https://www.youtube.com/watch?v=$videoId")
-//
-//                // 2. Extraer datos
-//                streamExtractor.fetchPage()
-//
-//                // 3. Obtener lista (solo para que corra el proceso interno)
-//                val streams = streamExtractor.videoStreams
-//
-//                // 4. USAR EL PUENTE MÁGICO
-//                // Leemos la variable estática de nuestra clase
-//                val magicUrl = org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor.lastWorkingUrl
-//
-//                if (magicUrl != null) {
-//                    // Si el puente tiene algo, LO USAMOS
-//                    Log.i("MainActivity", "¡URL recuperada del puente mágico!")
-//                    _videoUrlState.value = UIState.Success(magicUrl) as UIState<String>
-//                } else if (streams.isNotEmpty()) {
-//                    // Si no, intentamos la forma normal
-//                    val stream = streams.lastOrNull {
-//                        it.resolution.contains("360") || it.resolution.contains("720")
-//                    } ?: streams.last()
-//
-//                    // Chequeo extra de seguridad
-//                    if (stream.url != null) {
-//                        _videoUrlState.value = UIState.Success(stream.url) as UIState<String>
-//                    } else {
-//                        _videoUrlState.value = UIState.Error("Stream encontrado pero URL es null")
-//                    }
-//                } else {
-//                    _videoUrlState.value = UIState.Error("No se encontró stream válido")
-//                }
-//
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//                _videoUrlState.value = UIState.Error(e.message ?: "Error desconocido")
-//            }
-//        }
         viewModelScope.launch(Dispatchers.IO) {
             _videoUrlState.value = UIState.Loading
             try {
@@ -170,7 +127,7 @@ class MainViewModel : ViewModel() {
                 if (stream != null) {
                     _videoUrlState.value = UIState.Success(stream.url) as UIState<String>
                 } else {
-                    _videoUrlState.value = UIState.Error("No se encontró stream válido")
+                    _videoUrlState.value = UIState.Error("No se encontró stream valido")
                 }
 
             } catch (e: Exception) {

@@ -44,14 +44,11 @@ import androidx.media3.common.Player
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
-import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gvtlaiko.tengokaraoke.R
@@ -59,6 +56,10 @@ import com.gvtlaiko.tengokaraoke.adapters.GridSpacingItemDecoration
 import com.gvtlaiko.tengokaraoke.adapters.SugerenciasAdapter
 import com.gvtlaiko.tengokaraoke.adapters.VideoAdapter
 import com.gvtlaiko.tengokaraoke.adapters.VideoEnColaAdapter
+import com.gvtlaiko.tengokaraoke.core.Constantes.APP_PASSWORD
+import com.gvtlaiko.tengokaraoke.core.Constantes.APP_USER
+import com.gvtlaiko.tengokaraoke.core.Constantes.KEY_IS_UNLOCKED
+import com.gvtlaiko.tengokaraoke.core.Constantes.PREFS_NAME
 import com.gvtlaiko.tengokaraoke.core.UIState
 import com.gvtlaiko.tengokaraoke.data.models.response.Item
 import com.gvtlaiko.tengokaraoke.databinding.ActivityMainBinding
@@ -77,38 +78,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var videoAdapter: VideoAdapter
     private lateinit var videoAdapterEnCola: VideoEnColaAdapter
+    private lateinit var audioManager: AudioManager
+    private lateinit var adapterVideosSugerencias: ArrayAdapter<String>
     private val mainViewModel: MainViewModel by viewModels()
     private val listaVideos = mutableListOf<Item>()
     private val listaVideosEnCola = mutableListOf<Item>()
+    private val sugerenciasVideosList = mutableListOf<String>()
     private val TAG by lazy { "MainActivity" }
     private var karaoke = true
     private var actualVideo: Item? = null
-
     private var exoPlayer: ExoPlayer? = null
-
-    // Pitch y Velocidad
     private var currentPitch: Float = 1.0f // 1.0 es normal. 1.1 es más agudo. 0.9 más grave.
     private var currentSpeed: Float = 1.0f
-
-    private lateinit var audioManager: AudioManager
-
-    // --- CONFIGURACIÓN DE SEGURIDAD ---
-    private val PREFS_NAME = "AppConfig"
-    private val KEY_IS_UNLOCKED = "is_app_unlocked"
-
-    private val APP_USER = "tengori"
-    private val APP_PASSWORD = "1004"
-
     private var isPlayerFullscreen = false
     private var playerOriginalParent: FrameLayout? = null
     private var playerOriginalLayoutParams: FrameLayout.LayoutParams? = null
-
     private var isLoopingEnabled = false
-
-    private lateinit var adapterVideosSugerencias: ArrayAdapter<String>
-    private val sugerenciasVideosList = mutableListOf<String>()
-
-    var searchJob: Job? = null
+    private var searchJob: Job? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -282,12 +268,12 @@ class MainActivity : AppCompatActivity() {
     @OptIn(UnstableApi::class)
     private fun playExoPlayer(url: String) {
         try {
-            Log.i(TAG, "Iniciando ExoPlayer Oficial con URL: $url")
+            Log.i(TAG, "Iniciando ExoPlayer URL: $url")
 
-            // Liberamos el player anterior si existe
+            // liberar el player anterior si existe
             exoPlayer?.release()
 
-            // configuración de Sonic (Para que funcione el cambio de Tono/Velocidad)
+            // configuracion de Sonic (cambio de tono/velocidad)
             val renderersFactory = object : DefaultRenderersFactory(this) {
                 override fun buildAudioSink(
                     context: Context,
@@ -314,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                 .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
                 .build()
 
-            // Agregamos el listener al NUEVO player creado
+            // agregamos el listener al player creado
             exoPlayer?.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_ENDED) {
@@ -322,7 +308,6 @@ class MainActivity : AppCompatActivity() {
                             exoPlayer?.seekTo(0)
                             exoPlayer?.play()
                         } else {
-                            // Cuando termina, llama al siguiente video
                             iniciarReproduccionEnCola()
                         }
                     }
@@ -335,12 +320,11 @@ class MainActivity : AppCompatActivity() {
                         "Error: saltando al siguiente",
                         Toast.LENGTH_SHORT
                     ).show()
-                    // Si falla, intentamos reproducir el siguiente para no trabar la app
                     iniciarReproduccionEnCola()
                 }
             })
 
-            // Restauramos velocidad y tono si ya estaban cambiados
+            // restauramos velocidad y tono si estaban cambiados
             updatePitchAndSpeed()
 
             binding.playerView?.player = exoPlayer
@@ -348,7 +332,6 @@ class MainActivity : AppCompatActivity() {
             exoPlayer?.prepare()
             exoPlayer?.playWhenReady = true
 
-            // Manejo de visibilidad
             binding.playerView?.isVisible = true
             binding.llContenedorVideo?.isVisible = false
 
@@ -356,7 +339,6 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Error general: ${e.message}")
             binding.playerView?.isVisible = false
             binding.llContenedorVideo?.isVisible = true
-            // Si falla la inicialización, pasamos al siguiente
             iniciarReproduccionEnCola()
         }
     }
@@ -419,13 +401,13 @@ class MainActivity : AppCompatActivity() {
         when {
             valor > 1.0f -> {
                 textView.text = "↑"
-                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")
+                textView.setTextColor(Color.RED)
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
             valor < 1.0f -> {
                 textView.text = "↓"
-                textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+                textView.setTextColor(Color.RED)
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
@@ -443,29 +425,21 @@ class MainActivity : AppCompatActivity() {
         when {
             valor > 1.0f -> {
                 textView.text = "→"
-                textView.setTextColor(Color.RED) // O Color.parseColor("#00FF00")\
+                textView.setTextColor(Color.RED)
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
             valor < 1.0f -> {
                 textView.text = "←"
-                textView.setTextColor(Color.RED)   // O Color.parseColor("#FF0000")
+                textView.setTextColor(Color.RED)
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
             }
 
             else -> {
                 textView.text = "–"
-                textView.setTextColor(Color.WHITE) // Color normal
+                textView.setTextColor(Color.WHITE)
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
             }
-        }
-    }
-
-    private fun obtenerSimbolo(valor: Float): String {
-        return when {
-            valor > 1.0f -> "↑"
-            valor < 1.0f -> "↓"
-            else -> "·"
         }
     }
 
@@ -483,7 +457,6 @@ class MainActivity : AppCompatActivity() {
         updatePitchAndSpeed()
 
         Log.i(TAG, "Nuevo Tono: $currentPitch")
-//        binding.tvTonalidadVideo?.text = obtenerSimbolo(currentPitch)
         actualizarIndicadorTonalidad(binding.tvTonalidadVideo, currentPitch)
     }
 
@@ -575,7 +548,7 @@ class MainActivity : AppCompatActivity() {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(binding.edtxtBusquedaUsuario?.windowToken, 0)
 
-            Log.i(TAG, "Iniciando búsqueda con query: $query")
+            Log.i(TAG, "Iniciando busqueda con query: $query")
             mainViewModel.getVideos(query)
         }
     }

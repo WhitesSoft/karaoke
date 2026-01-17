@@ -16,24 +16,24 @@ class GridSpacingItemDecoration(
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        val position = parent.getChildAdapterPosition(view) // Posición del ítem
-        val column = position % spanCount // Columna del ítem
+        val position = parent.getChildAdapterPosition(view)
+        val column = position % spanCount
 
         if (includeEdge) {
-            // Con espaciado en los bordes
+            // espaciado en los bordes
             outRect.left = spacing - column * spacing / spanCount
             outRect.right = (column + 1) * spacing / spanCount
 
-            if (position < spanCount) { // Fila superior
+            if (position < spanCount) { // fila superior
                 outRect.top = spacing
             }
-            outRect.bottom = spacing // Espaciado inferior para todos
+            outRect.bottom = spacing // espaciado inferior para todos
         } else {
-            // Sin espaciado en los bordes
+            // sin espaciado en los bordes
             outRect.left = column * spacing / spanCount
             outRect.right = spacing - (column + 1) * spacing / spanCount
             if (position >= spanCount) {
-                outRect.top = spacing // Espaciado superior para las filas que no son la primera
+                outRect.top = spacing // espaciado superior para las filas que no son la primera
             }
         }
     }
