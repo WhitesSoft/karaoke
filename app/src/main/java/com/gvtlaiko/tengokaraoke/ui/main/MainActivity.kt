@@ -430,7 +430,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             else -> {
-                textView.text = "—"
+                textView.text = "–"
                 textView.setTextColor(Color.WHITE) // Color normal
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
             }
@@ -454,7 +454,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             else -> {
-                textView.text = "—"
+                textView.text = "–"
                 textView.setTextColor(Color.WHITE) // Color normal
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
             }

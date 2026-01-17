@@ -200,7 +200,7 @@
                         android:layout_height="60dp"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:text="—"
+                        android:text="–"
                         android:textColor="@color/white"
                         android:textSize="50sp"
                         android:textStyle="bold" />
@@ -231,7 +231,7 @@
                         android:layout_height="60dp"
                         android:gravity="center"
                         android:includeFontPadding="false"
-                        android:text="—"
+                        android:text="–"
                         android:textColor="@color/white"
                         android:textSize="50sp"
                         android:textStyle="bold" />
